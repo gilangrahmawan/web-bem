@@ -32,6 +32,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'password',
         'division_id',
         'position',
+        'kas_starts_on',
         'photo',
         'is_active',
         'must_change_password',
@@ -49,6 +50,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'kas_starts_on' => 'date',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
@@ -74,6 +76,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function kasPayments(): HasMany
+    {
+        return $this->hasMany(KasWeeklyPayment::class);
+    }
+
+    public function duePayments(): HasMany
+    {
+        return $this->hasMany(DuePayment::class);
     }
 
     /** Tugas konten Medpub yang ditugaskan ke user ini. */

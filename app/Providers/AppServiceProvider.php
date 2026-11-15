@@ -7,6 +7,7 @@ use App\Listeners\LogRolePermissionChanges;
 use App\Models\Setting;
 use App\Models\User;
 use App\Policies\Contracts\EnforcedForSuperAdmin;
+use App\Services\KasService;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Failed;
@@ -26,7 +27,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Satu instance per request: ringkasan kas di-memo dan dipakai bersama oleh beberapa widget.
+        $this->app->scoped(KasService::class);
     }
 
     public function boot(): void

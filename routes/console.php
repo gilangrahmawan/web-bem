@@ -12,3 +12,15 @@ Schedule::command('tasks:remind')
     ->dailyAt('07:00')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
+
+// Pengingat tunggakan kas & iuran setiap Senin pagi.
+Schedule::command('kas:remind-arrears')
+    ->weeklyOn(1, '08:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
+// Rekap kas bulan lalu ke Bendahara.
+Schedule::command('kas:monthly-recap')
+    ->monthlyOn(1, '08:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();

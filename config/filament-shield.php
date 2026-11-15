@@ -4,17 +4,25 @@ declare(strict_types=1);
 
 use App\Filament\Pages\Calendar;
 use App\Filament\Pages\ChangePassword;
+use App\Filament\Pages\KasWeekly;
 use App\Filament\Pages\ManageSettings;
 use App\Filament\Pages\MyProfile;
 use App\Filament\Pages\MyTasks;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Resources\Divisions\DivisionResource;
 use App\Filament\Resources\Downloads\DownloadResource;
+use App\Filament\Resources\Dues\DueResource;
 use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Periods\PeriodResource;
 use App\Filament\Resources\Programs\ProgramResource;
 use App\Filament\Resources\StructureMembers\StructureMemberResource;
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Widgets\DuesProgressChart;
+use App\Filament\Widgets\KasArrearsByDivisionChart;
+use App\Filament\Widgets\KasStatsOverview;
+use App\Filament\Widgets\KasStatusChart;
+use App\Filament\Widgets\KasWeeklyChart;
+use App\Filament\Widgets\MyKasWidget;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -99,8 +107,9 @@ return [
             ProgramResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
             StructureMemberResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
         ],
+        // Dijaga permission kustom (due.manage / kas.view_all) lewat DuePolicy, tanpa permission Shield baru.
         'exclude' => [
-            //
+            DueResource::class,
         ],
     ],
 
@@ -114,6 +123,7 @@ return [
             ManageSettings::class,  // dijaga permission kustom setting.manage
             Calendar::class,        // semua pengurus; isi dibatasi EventPolicy + permission event.*
             MyTasks::class,         // semua pengurus kecuali pembina; dibatasi EventAssigneePolicy
+            KasWeekly::class,       // kas.view_all / kas.manage
         ],
     ],
 
@@ -123,6 +133,13 @@ return [
         'exclude' => [
             AccountWidget::class,
             FilamentInfoWidget::class,
+            // Widget kas: hak akses diatur canView() (kas.view_all / pengurus wajib kas).
+            KasStatsOverview::class,
+            KasWeeklyChart::class,
+            KasStatusChart::class,
+            KasArrearsByDivisionChart::class,
+            DuesProgressChart::class,
+            MyKasWidget::class,
         ],
     ],
 

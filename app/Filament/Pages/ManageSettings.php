@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Services\ActivityLogger;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -50,6 +51,7 @@ class ManageSettings extends Page
         'social_tiktok',
         'social_youtube',
         'kas_weekly_amount',
+        'kas_start_date',
     ];
 
     protected static ?string $slug = 'pengaturan';
@@ -142,6 +144,12 @@ class ManageSettings extends Page
                             ->minValue(0)
                             ->maxValue(1_000_000)
                             ->required(),
+                        DatePicker::make('kas_start_date')
+                            ->label('Tanggal mulai kas')
+                            ->native(false)
+                            ->displayFormat('j F Y')
+                            ->format('Y-m-d')
+                            ->helperText('Minggu ke-1 = Senin pertama pada/setelah tanggal ini. Selama kosong, tidak ada tunggakan kas. Bendahara juga bisa mengubahnya di halaman Kas Mingguan.'),
                     ]),
             ]);
     }
@@ -169,6 +177,7 @@ class ManageSettings extends Page
 
         $data = $this->form->getState();
         $data['kas_weekly_amount'] = (int) $data['kas_weekly_amount'];
+        $data['kas_start_date'] = filled($data['kas_start_date'] ?? null) ? (string) $data['kas_start_date'] : null;
 
         $before = Setting::allValues();
         $changed = [];

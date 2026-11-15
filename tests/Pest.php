@@ -2,7 +2,10 @@
 
 use App\Enums\RoleName;
 use App\Models\Division;
+use App\Models\Period;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\KasService;
 use Database\Seeders\DivisionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Filament\Facades\Filament;
@@ -67,4 +70,31 @@ function member(RoleName $role, array $attributes = []): User
     $slug = $role->divisionSlug();
 
     return userWithRole($role, [...($slug ? ['division_id' => divisionId($slug)] : []), ...$attributes]);
+}
+
+/** Service kas dengan memo dibersihkan (setting bisa berubah di tengah test). */
+function kas(): KasService
+{
+    $service = app(KasService::class);
+    $service->flush();
+
+    return $service;
+}
+
+/**
+ * Periode aktif 1 Agu 2026 – 31 Jul 2027, "hari ini" Rabu 25 Nov 2026.
+ * Tanggal mulai kas default Senin 2 Nov 2026 → minggu ke-1..4 sudah dimulai (2, 9, 16, 23 Nov).
+ */
+function kasSetup(?string $startDate = '2026-11-02', string $today = '2026-11-25 10:00:00'): Period
+{
+    test()->travelTo($today);
+    $period = Period::factory()->active()->create(['starts_on' => '2026-08-01', 'ends_on' => '2027-07-31']);
+
+    if ($startDate !== null) {
+        Setting::set('kas_start_date', $startDate);
+    }
+
+    kas();
+
+    return $period;
 }
