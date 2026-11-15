@@ -33,12 +33,16 @@ class CalendarFeed
                 ? $end->copy()->addDay()->toDateString()
                 : $event->ends_at?->toIso8601String(),
             'allDay' => $event->all_day,
-            'backgroundColor' => $category->hex(),
-            'borderColor' => $event->has_conflict ? '#f59e0b' : $category->hex(),
-            'textColor' => '#ffffff',
+            'backgroundColor' => $category->background(),
+            // Agenda bentrok diberi bingkai amber (selain tanda ⚠ di judul).
+            'borderColor' => $event->has_conflict ? '#D97706' : ($category->accent() ?? $category->background()),
+            'textColor' => $category->text(),
+            'classNames' => ['bem-ev', 'bem-ev--'.$category->value],
             'extendedProps' => [
                 'category' => $category->value,
                 'categoryLabel' => $category->label(),
+                // Garis kiri tebal (campus, bem) dipasang lewat eventDidMount di calendar.js.
+                'accent' => $category->accent(),
                 'when' => self::when($event),
                 'location' => $event->location,
                 'organizer' => $event->organizer,

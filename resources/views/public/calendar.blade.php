@@ -8,17 +8,9 @@
 
     <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
         <section aria-label="Kalender">
-            <fieldset class="flex flex-wrap gap-2">
-                <legend class="sr-only">Tampilkan kategori</legend>
-                @foreach ($categories as $category)
-                    <label class="inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 has-[:checked]:bg-slate-50">
-                        <input type="checkbox" value="{{ $category->value }}" data-category-toggle checked class="size-4 rounded accent-brand-primary">
-                        <span class="size-2.5 rounded-full" style="background: {{ $category->hex() }}"></span>
-                        {{ $category->label() }}
-                    </label>
-                @endforeach
-            </fieldset>
-            <p class="mt-3 text-sm text-slate-500">Tanda ⚠ berarti ada lebih dari satu kegiatan BEM/UKM di tanggal yang sama.</p>
+            <div class="text-slate-700">
+                <x-calendar-legend :categories="$categories" toggle-attribute="data-category-toggle" />
+            </div>
 
             <div class="bem-fc mt-6 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 sm:p-5"
                 data-public-calendar data-feed-url="{{ route('public.calendar.feed') }}">

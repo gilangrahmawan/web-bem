@@ -19,7 +19,8 @@ use Illuminate\Validation\ValidationException;
  *
  * Aturan:
  * - Semua agenda seharian (all_day); end_date kosong = satu hari.
- * - Kategori hanya campus, commemoration, bem, ukm. `holiday` ditolak:
+ * - Kategori hanya campus, commemoration, regional_anniversary, university_anniversary, bem, ukm.
+ *   `holiday` & `collective_leave` ditolak:
  *   libur nasional & cuti bersama hanya dari HolidaySeeder.
  * - Duplikat (tanggal mulai + judul sama, tanpa beda huruf besar/kecil) selalu dilewati —
  *   baik terhadap agenda yang sudah ada maupun baris lain di file yang sama.
@@ -237,8 +238,8 @@ class CalendarImportService
 
         $category = EventCategory::tryFrom($row['category']);
 
-        if ($category === EventCategory::Holiday) {
-            $errors[] = 'Kategori holiday tidak boleh diimpor: libur nasional & cuti bersama hanya dari HolidaySeeder.';
+        if (in_array($category, [EventCategory::Holiday, EventCategory::CollectiveLeave], true)) {
+            $errors[] = "Kategori {$category->value} tidak boleh diimpor: libur nasional & cuti bersama hanya dari HolidaySeeder.";
         } elseif (! in_array($category, EventCategory::importableCases(), true)) {
             $errors[] = 'category harus salah satu dari: '.implode(', ', array_map(fn (EventCategory $c) => $c->value, EventCategory::importableCases())).'.';
         }

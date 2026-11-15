@@ -12,30 +12,31 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Libur nasional & cuti bersama 2026–2027 sesuai SKB 3 Menteri. Data manual, tanpa API eksternal.
- * Kategori `holiday`, tampil publik. Satu-satunya sumber libur nasional & cuti bersama di aplikasi.
+ * Libur nasional → kategori `holiday`; cuti bersama → kategori `collective_leave` (judul tanpa akhiran).
+ * Tampil publik. Satu-satunya sumber libur nasional & cuti bersama di aplikasi.
  *
  * Sumber:
  * - 2026: SKB 3 Menteri Nomor 1497/2/5 Tahun 2025 (17 libur nasional + 8 cuti bersama = 25)
  * - 2027: SKB 3 Menteri Nomor 1205/3/2 Tahun 2026 (18 libur nasional + 8 cuti bersama = 26)
- * Cuti bersama memakai judul berakhiran "(Cuti Bersama)".
  *
  * Catatan: tanggal Idulfitri dan Iduladha (beserta cuti bersamanya) bisa bergeser mengikuti
  * hasil sidang isbat Kementerian Agama. Bila bergeser, perbarui tanggal di daftar ini lalu jalankan ulang.
  * Isra Mikraj memang muncul dua kali di 2027 (1448 H pada Januari dan 1449 H pada Desember).
  *
  * MODE SINKRON (keputusan pemilik): daftar HOLIDAYS adalah sumber kebenaran untuk libur milik seeder.
- * - Upsert berdasarkan TANGGAL + JUDUL (judul saja tidak unik, mis. "Idulfitri 1447 H" dua hari).
+ * - Upsert berdasarkan TANGGAL + JUDUL + KATEGORI (judul saja tidak unik, mis. "Idulfitri 1447 H" dua hari).
  *   Deskripsi & lokasi yang ditambahkan pengurus tidak disentuh.
  * - Libur milik seeder yang tidak ada di daftar (mis. hasil perkiraan lama) DIHAPUS.
- * - Cakupan HANYA agenda kategori `holiday` yang dibuat seeder (created_by = null). Agenda kategori lain
- *   (commemoration, campus, bem, ukm, meeting, content, internal) dan libur yang ditambahkan manual
+ * - Cakupan HANYA agenda kategori `holiday` & `collective_leave` yang dibuat seeder (created_by = null).
+ *   Agenda kategori lain (commemoration, regional_anniversary, campus, university_anniversary, bem, ukm,
+ *   meeting, content, internal) dan libur nasional yang ditambahkan manual
  *   lewat dashboard tidak pernah disentuh.
  */
 class HolidaySeeder extends Seeder
 {
-    private const COLLECTIVE_LEAVE = ' (Cuti Bersama)';
+    private const CUTI = 'collective_leave';
 
-    /** @var list<array{0: string, 1: string}> [tanggal, judul] */
+    /** @var list<array{0: string, 1: string, 2?: string}> [tanggal, judul, kategori (default holiday)] */
     public const HOLIDAYS = [
         // Libur nasional 2026 — SKB 1497/2/5 Tahun 2025
         ['2026-01-01', 'Tahun Baru 2026 Masehi'],
@@ -57,14 +58,14 @@ class HolidaySeeder extends Seeder
         ['2026-12-25', 'Kelahiran Yesus Kristus'],
 
         // Cuti bersama 2026
-        ['2026-02-16', 'Tahun Baru Imlek'.self::COLLECTIVE_LEAVE],
-        ['2026-03-18', 'Hari Suci Nyepi'.self::COLLECTIVE_LEAVE],
-        ['2026-03-20', 'Idulfitri'.self::COLLECTIVE_LEAVE],
-        ['2026-03-23', 'Idulfitri'.self::COLLECTIVE_LEAVE],
-        ['2026-03-24', 'Idulfitri'.self::COLLECTIVE_LEAVE],
-        ['2026-05-15', 'Kenaikan Yesus Kristus'.self::COLLECTIVE_LEAVE],
-        ['2026-05-28', 'Iduladha'.self::COLLECTIVE_LEAVE],
-        ['2026-12-24', 'Kelahiran Yesus Kristus'.self::COLLECTIVE_LEAVE],
+        ['2026-02-16', 'Tahun Baru Imlek', self::CUTI],
+        ['2026-03-18', 'Hari Suci Nyepi', self::CUTI],
+        ['2026-03-20', 'Idulfitri', self::CUTI],
+        ['2026-03-23', 'Idulfitri', self::CUTI],
+        ['2026-03-24', 'Idulfitri', self::CUTI],
+        ['2026-05-15', 'Kenaikan Yesus Kristus', self::CUTI],
+        ['2026-05-28', 'Iduladha', self::CUTI],
+        ['2026-12-24', 'Kelahiran Yesus Kristus', self::CUTI],
 
         // Libur nasional 2027 — SKB 1205/3/2 Tahun 2026
         ['2027-01-01', 'Tahun Baru 2027 Masehi'],
@@ -87,14 +88,14 @@ class HolidaySeeder extends Seeder
         ['2027-12-26', 'Isra Mikraj Nabi Muhammad SAW 1449 H'],
 
         // Cuti bersama 2027
-        ['2027-02-05', 'Tahun Baru Imlek'.self::COLLECTIVE_LEAVE],
-        ['2027-03-09', 'Idulfitri'.self::COLLECTIVE_LEAVE],
-        ['2027-03-12', 'Idulfitri'.self::COLLECTIVE_LEAVE],
-        ['2027-03-15', 'Idulfitri'.self::COLLECTIVE_LEAVE],
-        ['2027-03-25', 'Wafat Yesus Kristus'.self::COLLECTIVE_LEAVE],
-        ['2027-05-18', 'Iduladha'.self::COLLECTIVE_LEAVE],
-        ['2027-05-19', 'Hari Raya Waisak'.self::COLLECTIVE_LEAVE],
-        ['2027-12-24', 'Kelahiran Yesus Kristus'.self::COLLECTIVE_LEAVE],
+        ['2027-02-05', 'Tahun Baru Imlek', self::CUTI],
+        ['2027-03-09', 'Idulfitri', self::CUTI],
+        ['2027-03-12', 'Idulfitri', self::CUTI],
+        ['2027-03-15', 'Idulfitri', self::CUTI],
+        ['2027-03-25', 'Wafat Yesus Kristus', self::CUTI],
+        ['2027-05-18', 'Iduladha', self::CUTI],
+        ['2027-05-19', 'Hari Raya Waisak', self::CUTI],
+        ['2027-12-24', 'Kelahiran Yesus Kristus', self::CUTI],
     ];
 
     public function run(ActivityLogger $logger): void
@@ -106,19 +107,21 @@ class HolidaySeeder extends Seeder
 
             foreach (self::HOLIDAYS as $row) {
                 [$date, $title] = $row;
+                $category = EventCategory::from($row[2] ?? EventCategory::Holiday->value);
 
                 $day = CarbonImmutable::parse($date);
 
                 $event = self::seederHolidays()
+                    ->where('category', $category->value)
                     ->where('title', $title)
                     ->whereBetween('starts_at', [$day->startOfDay(), $day->endOfDay()])
                     ->whereNotIn('id', $keptIds)
                     ->orderBy('id')
                     ->first()
-                    ?? new Event(['category' => EventCategory::Holiday, 'title' => $title]);
+                    ?? new Event(['category' => $category, 'title' => $title]);
 
                 $event->fill([
-                    'visibility' => EventCategory::Holiday->visibility(),
+                    'visibility' => $category->visibility(),
                     'starts_at' => $day->startOfDay(),
                     'ends_at' => null,
                     'all_day' => true,
@@ -159,14 +162,14 @@ class HolidaySeeder extends Seeder
 
     /**
      * Satu-satunya cakupan yang boleh diubah/dihapus seeder ini:
-     * kategori `holiday` DAN dibuat oleh seeder (bukan oleh pengurus lewat dashboard).
+     * kategori `holiday`/`collective_leave` DAN dibuat oleh seeder (bukan oleh pengurus lewat dashboard).
      *
      * @return Builder<Event>
      */
     private static function seederHolidays(): Builder
     {
         return Event::query()
-            ->where('category', EventCategory::Holiday->value)
+            ->whereIn('category', [EventCategory::Holiday->value, EventCategory::CollectiveLeave->value])
             ->whereNull('created_by');
     }
 }

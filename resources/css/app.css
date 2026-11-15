@@ -122,4 +122,26 @@
 
 .bem-fc .fc-event {
     cursor: pointer;
+    font-weight: 600;
+}
+
+/* Sel hari (legenda BEM): Minggu & tanggal Libur Nasional merah muda, Jumat hijau muda. */
+.bem-fc .fc .bem-day--friday {
+    background: rgb(147 247 171 / 0.35);
+}
+
+.bem-fc .fc .bem-day--sunday,
+.bem-fc .fc .bem-day--holiday {
+    background: rgb(255 171 171 / 0.35);
+}
+
+.bem-fc .fc .bem-day--sunday .fc-daygrid-day-number,
+.bem-fc .fc .bem-day--holiday .fc-daygrid-day-number,
+.bem-fc .fc .fc-col-header-cell.fc-day-sun {
+    color: #c00000;
+    font-weight: 700;
+}
+
+.bem-fc .fc .fc-day-today {
+    box-shadow: inset 0 0 0 2px var(--color-brand-accent);
 }

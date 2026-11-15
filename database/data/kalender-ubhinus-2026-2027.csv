@@ -3,8 +3,8 @@ start_date,end_date,title,category,subcategory,source
 2026-10-02,2026-10-02,Hari Batik Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2026-10-02,2026-10-04,Mentoring/Bible Camp (maba),campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2026-10-05,2026-10-05,HUT TNI,commemoration,Hari Peringatan Nasional,Keppres hari nasional
-2026-10-12,2026-10-12,Hari Jadi Provinsi Jawa Timur ke-81,commemoration,Hari Jadi Daerah,Hari jadi daerah
-2026-10-17,2026-10-17,Hari Jadi Kota Batu ke-25,commemoration,Hari Jadi Daerah,Hari jadi daerah
+2026-10-12,2026-10-12,Hari Jadi Provinsi Jawa Timur ke-81,regional_anniversary,Hari Jadi Daerah,Hari jadi daerah
+2026-10-17,2026-10-17,Hari Jadi Kota Batu ke-25,regional_anniversary,Hari Jadi Daerah,Hari jadi daerah
 2026-10-22,2026-10-22,Hari Santri Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2026-10-26,2026-10-29,UTS Semester Ganjil,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2026-10-28,2026-10-28,Hari Sumpah Pemuda,commemoration,Hari Peringatan Nasional,Keppres hari nasional
@@ -13,7 +13,7 @@ start_date,end_date,title,category,subcategory,source
 2026-11-09,2026-11-13,UTS Mahasiswa Baru,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2026-11-10,2026-11-10,Hari Pahlawan,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2026-11-25,2026-11-25,Hari Guru Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
-2026-11-28,2026-11-28,Hari Jadi Kabupaten Malang ke-1266,commemoration,Hari Jadi Daerah,Hari jadi daerah
+2026-11-28,2026-11-28,Hari Jadi Kabupaten Malang ke-1266,regional_anniversary,Hari Jadi Daerah,Hari jadi daerah
 2026-12-09,2026-12-09,Wisuda Ahli Madya & Sarjana 2026,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2026-12-13,2026-12-13,Hari Nusantara,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2026-12-19,2026-12-19,Hari Bela Negara,commemoration,Hari Peringatan Nasional,Keppres hari nasional
@@ -21,7 +21,7 @@ start_date,end_date,title,category,subcategory,source
 2026-12-24,2027-01-02,Libur Natal 2026 & Tahun Baru 2027,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2027-01-04,2027-01-14,UAS Semester Ganjil,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2027-01-08,2027-01-08,Batas bayar SPP Tetap/UKT 1 Semester Genap,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
-2027-01-10,2027-01-10,HUT UBHINUS ke-2,campus,HUT UBHINUS,SK Kemendikbudristek No. 52/A/O/2025 (10 Jan 2025)
+2027-01-10,2027-01-10,HUT UBHINUS ke-2,university_anniversary,HUT UBHINUS,SK Kemendikbudristek No. 52/A/O/2025 (10 Jan 2025)
 2027-01-15,2027-01-15,Hari Dharma Samudera,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2027-01-18,2027-01-28,UAS Mahasiswa Baru,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2027-01-25,2027-01-25,Hari Gizi Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
@@ -35,7 +35,7 @@ start_date,end_date,title,category,subcategory,source
 2027-03-02,2027-03-02,Awal Perkuliahan Genap Maba,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2027-03-29,2027-03-29,Pertemuan dengan Orang Tua Maba,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2027-03-30,2027-03-30,Hari Film Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
-2027-04-01,2027-04-01,Hari Jadi Kota Malang ke-113,commemoration,Hari Jadi Daerah,Hari jadi daerah
+2027-04-01,2027-04-01,Hari Jadi Kota Malang ke-113,regional_anniversary,Hari Jadi Daerah,Hari jadi daerah
 2027-04-09,2027-04-10,PKKMB: LKMM Tingkat Dasar,campus,Kalender Akademik UBHINUS,Kalender Akademik & Kalender Maba UBHINUS 2026/2027
 2027-04-21,2027-04-21,Hari Kartini,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2027-05-02,2027-05-02,Hari Pendidikan Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
@@ -49,8 +49,8 @@ start_date,end_date,title,category,subcategory,source
 2027-10-01,2027-10-01,Hari Kesaktian Pancasila,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2027-10-02,2027-10-02,Hari Batik Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2027-10-05,2027-10-05,HUT TNI,commemoration,Hari Peringatan Nasional,Keppres hari nasional
-2027-10-12,2027-10-12,Hari Jadi Provinsi Jawa Timur ke-82,commemoration,Hari Jadi Daerah,Hari jadi daerah
-2027-10-17,2027-10-17,Hari Jadi Kota Batu ke-26,commemoration,Hari Jadi Daerah,Hari jadi daerah
+2027-10-12,2027-10-12,Hari Jadi Provinsi Jawa Timur ke-82,regional_anniversary,Hari Jadi Daerah,Hari jadi daerah
+2027-10-17,2027-10-17,Hari Jadi Kota Batu ke-26,regional_anniversary,Hari Jadi Daerah,Hari jadi daerah
 2027-10-22,2027-10-22,Hari Santri Nasional,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2027-10-28,2027-10-28,Hari Sumpah Pemuda,commemoration,Hari Peringatan Nasional,Keppres hari nasional
 2027-10-30,2027-10-30,Hari Oeang RI,commemoration,Hari Peringatan Nasional,Keppres hari nasional

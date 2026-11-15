@@ -35,8 +35,8 @@ function statuses(array $rows): array
 it('kategori Hari Peringatan publik, berwarna sendiri, dan tidak memicu bentrok', function (): void {
     expect(EventCategory::Commemoration->isPublic())->toBeTrue()
         ->and(EventCategory::Commemoration->checksConflict())->toBeFalse()
-        ->and(EventCategory::Commemoration->hex())->not->toBe(EventCategory::Holiday->hex())
-        ->and(EventCategory::Commemoration->label())->toBe('Hari Peringatan');
+        ->and(EventCategory::Commemoration->background())->not->toBe(EventCategory::Holiday->background())
+        ->and(EventCategory::Commemoration->label())->toBe('Hari Peringatan Nasional');
 
     $service = app(EventService::class);
     $a = $service->create(superAdmin(), ['title' => 'Hari Pahlawan', 'category' => 'commemoration', 'starts_at' => '2026-11-10']);
@@ -138,8 +138,10 @@ it('CalendarCsvSeeder memuat 55 agenda dari CSV tanpa libur nasional', function 
     expect(Event::count())->toBe(55)
         ->and(Event::where('category', EventCategory::Holiday->value)->count())->toBe(0)
         ->and(Event::where('all_day', false)->count())->toBe(0)
-        ->and(Event::where('category', 'commemoration')->count())->toBe(38)
-        ->and(Event::where('category', 'campus')->count())->toBe(17);
+        ->and(Event::where('category', 'commemoration')->count())->toBe(32)
+        ->and(Event::where('category', 'regional_anniversary')->count())->toBe(6)
+        ->and(Event::where('category', 'campus')->count())->toBe(16)
+        ->and(Event::where('category', 'university_anniversary')->pluck('title')->all())->toBe(['HUT UBHINUS ke-2']);
 
     $uts = Event::where('title', 'UTS Semester Ganjil')->firstOrFail();
     expect($uts->starts_at->toDateString())->toBe('2026-10-26')
@@ -167,13 +169,14 @@ it('CalendarCsvSeeder insert-only: dijalankan ulang tetap 55 agenda dan editan d
 it('CSV kalender tidak memuat libur nasional/cuti bersama dan tidak bertabrakan dengan HolidaySeeder', function (): void {
     $rows = importer()->parse((string) file_get_contents(database_path(CalendarCsvSeeder::FILE)));
 
-    expect(collect($rows)->pluck('category')->unique()->sort()->values()->all())->toBe(['campus', 'commemoration'])
+    expect(collect($rows)->pluck('category')->unique()->sort()->values()->all())->toBe(['campus', 'commemoration', 'regional_anniversary', 'university_anniversary'])
         ->and(collect($rows)->filter(fn ($r) => str_contains(mb_strtolower($r['title']), 'cuti bersama')))->toBeEmpty();
 
     $this->seed([HolidaySeeder::class, CalendarCsvSeeder::class]);
 
-    expect(Event::where('category', 'holiday')->count())->toBe(51)
-        ->and(Event::where('category', '!=', 'holiday')->count())->toBe(55);
+    expect(Event::where('category', 'holiday')->count())->toBe(35)
+        ->and(Event::where('category', 'collective_leave')->count())->toBe(16)
+        ->and(Event::whereNotIn('category', ['holiday', 'collective_leave'])->count())->toBe(55);
 });
 
 // --- Impor lewat dashboard -----------------------------------------------------------------

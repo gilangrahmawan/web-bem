@@ -6,6 +6,7 @@ use App\Enums\EventCategory;
 use App\Enums\RoleName;
 use App\Models\Event;
 use App\Models\User;
+use App\Policies\Contracts\EnforcedForSuperAdmin;
 
 /**
  * Agenda kalender (AGENTS.md C4, D4 + keputusan pemilik Fase 3).
@@ -16,9 +17,17 @@ use App\Models\User;
  *   boleh divisi mana pun atau "umum" (tanpa divisi).
  * - Agenda publik & UKM tidak dibatasi divisi: semua pemegang permission kategorinya boleh mengubah.
  * - Pembina hanya melihat.
+ * - Cuti bersama (collective_leave) hanya dari HolidaySeeder: create/update/delete ditolak untuk siapa pun,
+ *   TERMASUK super_admin (EnforcedForSuperAdmin). Kategori lain tetap lolos bagi super_admin karena
+ *   cek permission di dalamnya diloloskan Gate::before.
  */
-class EventPolicy
+class EventPolicy implements EnforcedForSuperAdmin
 {
+    public static function superAdminEnforcedAbilities(): array
+    {
+        return ['create', 'update', 'delete'];
+    }
+
     public function viewAny(User $user): bool
     {
         return $user->is_active;
@@ -38,7 +47,9 @@ class EventPolicy
 
         $category = $category instanceof EventCategory ? $category : EventCategory::tryFrom($category);
 
-        return $category !== null && $user->can($category->requiredPermission());
+        return $category !== null
+            && ! $category->isSeederOnly()
+            && $user->can($category->requiredPermission());
     }
 
     /** Impor CSV kalender akademik/hari peringatan: super_admin & sekretaris. */
@@ -78,7 +89,7 @@ class EventPolicy
     {
         return array_values(array_filter(
             EventCategory::cases(),
-            fn (EventCategory $category): bool => $user->can($category->requiredPermission()),
+            fn (EventCategory $category): bool => ! $category->isSeederOnly() && $user->can($category->requiredPermission()),
         ));
     }
 
@@ -107,7 +118,8 @@ class EventPolicy
 
     private function manages(User $user, Event $event): bool
     {
-        return $user->can($event->category->requiredPermission())
+        return ! $event->category->isSeederOnly()
+            && $user->can($event->category->requiredPermission())
             && self::canUseDivision($user, $event->category, $event->division_id);
     }
 }
