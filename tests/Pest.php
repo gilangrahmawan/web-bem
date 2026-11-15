@@ -10,6 +10,7 @@ use Database\Seeders\DivisionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Features\SupportTesting\Testable;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -97,4 +98,21 @@ function kasSetup(?string $startDate = '2026-11-02', string $today = '2026-11-25
     kas();
 
     return $period;
+}
+
+/**
+ * Turnstile palsu: tidak pernah memanggil server Cloudflare.
+ * Permintaan HTTP lain yang tidak di-fake akan gagal (preventStrayRequests).
+ */
+function fakeTurnstile(bool $success = true): void
+{
+    config([
+        'services.turnstile.site_key' => '1x00000000000000000000AA',
+        'services.turnstile.secret_key' => 'rahasia-uji',
+    ]);
+
+    Http::preventStrayRequests();
+    Http::fake([
+        'challenges.cloudflare.com/*' => Http::response(['success' => $success]),
+    ]);
 }

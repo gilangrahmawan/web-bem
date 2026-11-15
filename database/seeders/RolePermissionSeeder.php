@@ -50,7 +50,7 @@ class RolePermissionSeeder extends Seeder
     {
         return [
             RoleName::Sekretaris->value => [
-                'announcement.create', 'folder.manage', 'download.manage',
+                'announcement.create', 'folder.manage', 'download.manage', 'aspiration.view',
                 'submission.verify', 'recruitment.manage',
                 'event.create_public', 'event.create_ukm', 'event.create_meeting',
                 'chat.use',
@@ -67,7 +67,7 @@ class RolePermissionSeeder extends Seeder
                 ...self::MANAGE_PROGRAMS,
             ],
             RoleName::AnggotaKajian->value => [
-                'discussion.create',
+                'discussion.create', 'aspiration.view',
                 'chat.use',
             ],
             RoleName::KoordinatorMedpub->value => [
@@ -98,7 +98,7 @@ class RolePermissionSeeder extends Seeder
                 'view_any_download', 'view_download',
                 'view_any_gallery', 'view_gallery',
                 'view_any_program', 'view_program',
-                'kas.view_all', 'report.view',
+                'kas.view_all', 'report.view', 'aspiration.view',
             ],
         ];
     }

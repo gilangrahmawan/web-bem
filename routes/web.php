@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Panel\AnnouncementAttachmentController;
 use App\Http\Controllers\Panel\TaskResultController;
+use App\Http\Controllers\Public\AspirationController;
 use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Public\DivisionController;
 use App\Http\Controllers\Public\DownloadController;
@@ -49,10 +51,18 @@ Route::name('public.')->group(function (): void {
         ->middleware('throttle:60,1')
         ->name('calendar.feed');
 
-    // Placeholder "segera hadir" — diganti di Fase 5 (aspirasi), 7 (pengajuan & oprec).
+    // Aspirasi: kirim (5/IP/jam) & cek status (20/IP/jam), keduanya dengan Turnstile.
+    Route::get('/aspirasi', [AspirationController::class, 'create'])->name('aspirations.create');
+    Route::post('/aspirasi', [AspirationController::class, 'store'])
+        ->middleware('throttle:public-submit')
+        ->name('aspirations.store');
+    Route::get('/aspirasi/status', [AspirationController::class, 'status'])->name('aspirations.status');
+    Route::post('/aspirasi/status', [AspirationController::class, 'check'])
+        ->middleware('throttle:public-status')
+        ->name('aspirations.check');
+
+    // Placeholder "segera hadir" — diganti di Fase 7 (pengajuan & oprec).
     $soon = [
-        'aspirations.create' => ['/aspirasi', 'Kirim Aspirasi'],
-        'aspirations.status' => ['/aspirasi/status', 'Cek Status Aspirasi'],
         'submissions.create' => ['/pengajuan', 'Pengajuan Proposal & LPJ'],
         'submissions.status' => ['/pengajuan/status', 'Cek Status Pengajuan'],
         'recruitment.create' => ['/oprec', 'Open Recruitment'],
@@ -72,6 +82,9 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
         Route::get('/tugas/{assignee}/hasil', TaskResultController::class)
             ->whereNumber('assignee')
             ->name('tasks.result');
+        Route::get('/pesan/{announcement}/lampiran', AnnouncementAttachmentController::class)
+            ->whereNumber('announcement')
+            ->name('announcements.attachment');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

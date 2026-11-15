@@ -133,6 +133,7 @@ it('alur tugas: mulai, serahkan berkas, tandai selesai oleh koordinator', functi
 
     actingAs(member(RoleName::KoordinatorMedpub));
     livewire(MyTasks::class)
+        ->filterTable('mine', false) // default koordinator: hanya tugasnya sendiri
         ->callAction(TestAction::make('markDone')->table($task))
         ->assertHasNoFormErrors();
 
@@ -168,4 +169,17 @@ it('anggota hanya melihat tugasnya sendiri di Tugas Saya', function (): void {
     livewire(MyTasks::class)
         ->assertCanSeeTableRecords([$mine])
         ->assertCanNotSeeTableRecords([$others]);
+});
+
+it('koordinator Medpub melihat Tugas Saya dengan filter "Hanya tugas saya" lalu semua tugas', function (): void {
+    $koor = member(RoleName::KoordinatorMedpub);
+    $mine = contentTask(['user_id' => $koor->id]);
+    $others = contentTask();
+    actingAs($koor);
+
+    livewire(MyTasks::class)
+        ->assertCanSeeTableRecords([$mine])
+        ->assertCanNotSeeTableRecords([$others])
+        ->filterTable('mine', false)
+        ->assertCanSeeTableRecords([$mine, $others]);
 });

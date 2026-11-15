@@ -75,7 +75,7 @@ it('pembina tidak bisa mengubah apa pun', function (): void {
 
     // Semua permission pembina hanya bertipe lihat (view/view_any) atau baca laporan/kas.
     $pembina->getAllPermissions()->pluck('name')->each(
-        fn (string $name) => expect($name)->toMatch('/^(view_|view_any_|report\.view|kas\.view_all)/')
+        fn (string $name) => expect($name)->toMatch('/^(view_|view_any_|report\.view|kas\.view_all|aspiration\.view)/')
     );
 });
 

@@ -38,13 +38,14 @@ class SecurityHeaders
 
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'".$vite,
+            // Turnstile (CAPTCHA form publik) memuat skrip & iframe dari challenges.cloudflare.com.
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com".$vite,
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net".$vite,
             "font-src 'self' data: https://fonts.bunny.net",
             "img-src 'self' data: blob:",
             "connect-src 'self'".$vite,
             // Hanya embed peta Google Maps (halaman Kontak).
-            'frame-src https://www.google.com',
+            'frame-src https://www.google.com https://challenges.cloudflare.com',
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",

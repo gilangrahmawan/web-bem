@@ -15,12 +15,14 @@ class ActivityLogger
 {
     /**
      * @param  array<string, mixed>  $properties
+     * @param  bool  $recordIp  false untuk kiriman publik (aspirasi anonim tidak boleh menyimpan IP, AGENTS.md B4)
      */
     public function log(
         string $action,
         ?Model $subject = null,
         array $properties = [],
         ?User $user = null,
+        bool $recordIp = true,
     ): ActivityLog {
         $user ??= Auth::user();
 
@@ -30,7 +32,7 @@ class ActivityLogger
             'subject_type' => $subject?->getMorphClass(),
             'subject_id' => $subject?->getKey(),
             'properties' => $properties ?: null,
-            'ip' => app()->runningInConsole() && ! app()->runningUnitTests() ? null : request()->ip(),
+            'ip' => ! $recordIp || (app()->runningInConsole() && ! app()->runningUnitTests()) ? null : request()->ip(),
         ]);
     }
 }

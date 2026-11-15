@@ -8,13 +8,18 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Policies\Contracts\EnforcedForSuperAdmin;
 use App\Services\KasService;
+use App\Services\Letters\LetterArchiver;
+use App\Services\Letters\NullLetterArchiver;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -29,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Satu instance per request: ringkasan kas di-memo dan dipakai bersama oleh beberapa widget.
         $this->app->scoped(KasService::class);
+
+        // Arsip surat ke Drive: implementasi nyata menyusul di Fase 8.
+        $this->app->bind(LetterArchiver::class, NullLetterArchiver::class);
     }
 
     public function boot(): void
@@ -39,7 +47,18 @@ class AppServiceProvider extends ServiceProvider
         $this->configureSuperAdminGate();
         $this->configureShieldPermissionNames();
         $this->registerEventListeners();
+        $this->configurePublicRateLimits();
         $this->sharePublicSiteSettings();
+    }
+
+    /**
+     * Rate limit form publik (AGENTS.md B4): kirim 5/IP/jam, cek status 20/IP/jam.
+     * IP hanya dipakai sebagai kunci cache sementara, tidak disimpan di database.
+     */
+    private function configurePublicRateLimits(): void
+    {
+        RateLimiter::for('public-submit', fn (Request $request) => Limit::perHour(5)->by('submit|'.$request->ip()));
+        RateLimiter::for('public-status', fn (Request $request) => Limit::perHour(20)->by('status|'.$request->ip()));
     }
 
     /** Pengaturan website ($site) tersedia di layout & halaman publik serta halaman error. */

@@ -111,8 +111,8 @@ class MyTasks extends Page implements HasTable
         return $table
             ->query(fn (): Builder => EventAssignee::query()
                 ->with(['event', 'user'])
-                ->whereHas('event', fn (Builder $q) => $q->where('category', EventCategory::Content->value))
-                ->when(! $reviewsAll, fn (Builder $q) => $q->where('user_id', $user->getKey())))
+                ->whereHas('event', fn (Builder $query) => $query->where('category', EventCategory::Content->value))
+                ->when(! $reviewsAll, fn (Builder $query) => $query->where('user_id', $user->getKey())))
             ->defaultSort(fn (Builder $query): Builder => $query->orderBy(
                 Event::query()->select('starts_at')->whereColumn('events.id', 'event_assignees.event_id')
             ))
@@ -151,7 +151,7 @@ class MyTasks extends Page implements HasTable
                     ->label('Hanya tugas saya')
                     ->toggle()
                     ->default()
-                    ->query(fn (Builder $q) => $q->where('user_id', $user->getKey()))
+                    ->query(fn (Builder $query) => $query->where('user_id', $user->getKey()))
                     ->visible($reviewsAll),
                 SelectFilter::make('status')
                     ->label('Status')

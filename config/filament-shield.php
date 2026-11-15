@@ -4,24 +4,34 @@ declare(strict_types=1);
 
 use App\Filament\Pages\Calendar;
 use App\Filament\Pages\ChangePassword;
+use App\Filament\Pages\Inbox;
 use App\Filament\Pages\KasWeekly;
 use App\Filament\Pages\ManageSettings;
 use App\Filament\Pages\MyProfile;
 use App\Filament\Pages\MyTasks;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
+use App\Filament\Resources\Announcements\AnnouncementResource;
+use App\Filament\Resources\Aspirations\AspirationResource;
+use App\Filament\Resources\Discussions\DiscussionResource;
 use App\Filament\Resources\Divisions\DivisionResource;
 use App\Filament\Resources\Downloads\DownloadResource;
 use App\Filament\Resources\Dues\DueResource;
 use App\Filament\Resources\Galleries\GalleryResource;
+use App\Filament\Resources\Letters\LetterResource;
 use App\Filament\Resources\Periods\PeriodResource;
 use App\Filament\Resources\Programs\ProgramResource;
 use App\Filament\Resources\StructureMembers\StructureMemberResource;
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Widgets\AspirationStatusChart;
+use App\Filament\Widgets\AspirationWeeklyChart;
+use App\Filament\Widgets\DiscussionStatusChart;
 use App\Filament\Widgets\DuesProgressChart;
+use App\Filament\Widgets\InboxStatsWidget;
 use App\Filament\Widgets\KasArrearsByDivisionChart;
 use App\Filament\Widgets\KasStatsOverview;
 use App\Filament\Widgets\KasStatusChart;
 use App\Filament\Widgets\KasWeeklyChart;
+use App\Filament\Widgets\MessageReadRateChart;
 use App\Filament\Widgets\MyKasWidget;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
@@ -110,6 +120,11 @@ return [
         // Dijaga permission kustom (due.manage / kas.view_all) lewat DuePolicy, tanpa permission Shield baru.
         'exclude' => [
             DueResource::class,
+            // Fase 5: dijaga policy + permission kustom (aspiration.*, discussion.*, announcement.create, letter.create).
+            AspirationResource::class,
+            DiscussionResource::class,
+            AnnouncementResource::class,
+            LetterResource::class,
         ],
     ],
 
@@ -124,6 +139,7 @@ return [
             Calendar::class,        // semua pengurus; isi dibatasi EventPolicy + permission event.*
             MyTasks::class,         // semua pengurus kecuali pembina; dibatasi EventAssigneePolicy
             KasWeekly::class,       // kas.view_all / kas.manage
+            Inbox::class,           // semua pengurus (hanya pesan miliknya)
         ],
     ],
 
@@ -140,6 +156,12 @@ return [
             KasArrearsByDivisionChart::class,
             DuesProgressChart::class,
             MyKasWidget::class,
+            // Widget Fase 5: hak akses diatur canView().
+            AspirationStatusChart::class,
+            AspirationWeeklyChart::class,
+            InboxStatsWidget::class,
+            MessageReadRateChart::class,
+            DiscussionStatusChart::class,
         ],
     ],
 
@@ -164,6 +186,7 @@ return [
         'post.approve_coordinator' => 'Setujui konten (koordinator)',
         'post.approve_leader' => 'Setujui konten (ketua/wakil)',
         'post.publish' => 'Terbitkan konten',
+        'aspiration.view' => 'Lihat aspirasi',
         'aspiration.handle' => 'Tangani aspirasi',
         'aspiration.escalate' => 'Eskalasi aspirasi',
         'aspiration.forward_to_kajian' => 'Teruskan aspirasi ke Kajian',
