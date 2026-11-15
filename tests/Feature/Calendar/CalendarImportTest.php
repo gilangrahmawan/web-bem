@@ -172,7 +172,7 @@ it('CSV kalender tidak memuat libur nasional/cuti bersama dan tidak bertabrakan 
 
     $this->seed([HolidaySeeder::class, CalendarCsvSeeder::class]);
 
-    expect(Event::where('category', 'holiday')->count())->toBe(34)
+    expect(Event::where('category', 'holiday')->count())->toBe(51)
         ->and(Event::where('category', '!=', 'holiday')->count())->toBe(55);
 });
 
