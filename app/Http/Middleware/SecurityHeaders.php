@@ -43,6 +43,8 @@ class SecurityHeaders
             "font-src 'self' data: https://fonts.bunny.net",
             "img-src 'self' data: blob:",
             "connect-src 'self'".$vite,
+            // Hanya embed peta Google Maps (halaman Kontak).
+            'frame-src https://www.google.com',
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Listeners\LogAuthenticationActivity;
 use App\Listeners\LogRolePermissionChanges;
+use App\Models\Setting;
 use App\Models\User;
 use App\Policies\Contracts\EnforcedForSuperAdmin;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
@@ -13,6 +14,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -35,6 +37,16 @@ class AppServiceProvider extends ServiceProvider
         $this->configureSuperAdminGate();
         $this->configureShieldPermissionNames();
         $this->registerEventListeners();
+        $this->sharePublicSiteSettings();
+    }
+
+    /** Pengaturan website ($site) tersedia di layout & halaman publik serta halaman error. */
+    private function sharePublicSiteSettings(): void
+    {
+        View::composer(
+            ['components.layouts.public', 'public.*', 'errors::*'],
+            fn ($view) => $view->with('site', Setting::allValues()),
+        );
     }
 
     /** Password minimal 10 karakter: huruf, angka, simbol (AGENTS.md B4). */

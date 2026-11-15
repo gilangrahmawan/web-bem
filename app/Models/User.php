@@ -56,6 +56,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Foto profil lama dihapus saat diganti.
+        static::updated(function (User $user): void {
+            if ($user->wasChanged('photo') && $old = $user->getOriginal('photo')) {
+                Storage::disk('public')->delete($old);
+            }
+        });
+    }
+
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class);

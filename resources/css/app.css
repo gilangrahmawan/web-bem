@@ -2,8 +2,101 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../../app/Enums/*.php';
 
+/*
+| Token warna identitas BEM UBHINUS.
+| Dipakai sebagai kelas Tailwind: bg-brand-primary, text-brand-accent, dst.
+*/
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-brand-primary: #232361;   /* navy BEM */
+    --color-brand-accent: #ffdb1a;    /* kuning BEM */
+    --color-brand-secondary: #000078; /* navy UBHINUS */
+    --color-brand-muted: #b6b6b7;     /* abu UBHINUS */
+
+    --color-brand-primary-50: #f2f2f9;
+    --color-brand-primary-100: #e3e3f1;
+    --color-brand-primary-200: #c4c4e2;
+    --color-brand-primary-700: #1b1b4d;
+    --color-brand-primary-800: #15153b;
+    --color-brand-primary-900: #0e0e28;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-white text-slate-800 antialiased;
+    }
+
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-brand-accent;
+    }
+}
+
+/* Isi artikel dari rich editor (sudah disanitasi). */
+@layer components {
+    .prose-bem {
+        @apply max-w-none text-[1.0625rem] leading-relaxed text-slate-700;
+    }
+
+    .prose-bem > * + * {
+        @apply mt-5;
+    }
+
+    .prose-bem h2 {
+        @apply mt-10 text-2xl font-bold text-brand-primary;
+    }
+
+    .prose-bem h3 {
+        @apply mt-8 text-xl font-bold text-brand-primary;
+    }
+
+    .prose-bem h4 {
+        @apply mt-6 text-lg font-semibold text-slate-900;
+    }
+
+    .prose-bem a {
+        @apply font-medium text-brand-secondary underline decoration-brand-accent decoration-2 underline-offset-2 hover:text-brand-primary;
+    }
+
+    .prose-bem ul {
+        @apply list-disc space-y-2 pl-6;
+    }
+
+    .prose-bem ol {
+        @apply list-decimal space-y-2 pl-6;
+    }
+
+    .prose-bem blockquote {
+        @apply border-l-4 border-brand-accent bg-brand-primary-50 py-3 pr-4 pl-5 italic text-slate-700;
+    }
+
+    .prose-bem img {
+        @apply h-auto max-w-full rounded-xl;
+    }
+
+    .prose-bem table {
+        @apply w-full border-collapse text-sm;
+    }
+
+    .prose-bem th,
+    .prose-bem td {
+        @apply border border-slate-200 px-3 py-2 text-left;
+    }
+
+    .prose-bem th {
+        @apply bg-slate-50 font-semibold;
+    }
+
+    .prose-bem pre {
+        @apply overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100;
+    }
 }

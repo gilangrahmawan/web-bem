@@ -59,6 +59,9 @@ class ActivityLog extends Model
             'role.permissions_added' => 'Permission role ditambah',
             'role.permissions_removed' => 'Permission role dicabut',
             'period.activated' => 'Periode diaktifkan',
+            'download.deleted' => 'Berkas unduhan dihapus',
+            'gallery.deleted' => 'Album galeri dihapus',
+            'gallery_photo.deleted' => 'Foto galeri dihapus',
             'setting.updated' => 'Pengaturan diubah',
             default => $action,
         };

@@ -6,7 +6,11 @@ use App\Filament\Pages\ChangePassword;
 use App\Filament\Pages\ManageSettings;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Resources\Divisions\DivisionResource;
+use App\Filament\Resources\Downloads\DownloadResource;
+use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Periods\PeriodResource;
+use App\Filament\Resources\Programs\ProgramResource;
+use App\Filament\Resources\StructureMembers\StructureMemberResource;
 use App\Filament\Resources\Users\UserResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
@@ -87,6 +91,10 @@ return [
             DivisionResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
             PeriodResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
             ActivityLogResource::class => ['viewAny', 'view'],
+            DownloadResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
+            GalleryResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
+            ProgramResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
+            StructureMemberResource::class => ['viewAny', 'view', 'create', 'update', 'delete'],
         ],
         'exclude' => [
             //

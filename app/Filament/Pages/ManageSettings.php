@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\WebpImageUpload;
 use App\Models\Setting;
 use App\Services\ActivityLogger;
 use BackedEnum;
@@ -20,6 +21,7 @@ use Filament\Support\Components\Attributes\Unexposed;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use UnitEnum;
 
 /**
@@ -35,6 +37,12 @@ class ManageSettings extends Page
         'vision',
         'mission',
         'leader_welcome',
+        'history',
+        'logo_philosophy',
+        'hero_title',
+        'hero_subtitle',
+        'hero_image',
+        'maps_embed_url',
         'contact_email',
         'contact_phone',
         'contact_address',
@@ -91,7 +99,18 @@ class ManageSettings extends Page
                         Textarea::make('vision')->label('Visi')->rows(3)->maxLength(2000),
                         Textarea::make('mission')->label('Misi')->rows(6)->maxLength(5000)
                             ->helperText('Satu poin per baris.'),
-                        Textarea::make('leader_welcome')->label('Sambutan Ketua')->rows(6)->maxLength(5000),
+                        Textarea::make('leader_welcome')->label('Sambutan Ketua')->rows(6)->maxLength(5000)
+                            ->helperText('Pisahkan paragraf dengan satu baris kosong.'),
+                        Textarea::make('history')->label('Sejarah BEM')->rows(6)->maxLength(10000),
+                        Textarea::make('logo_philosophy')->label('Filosofi logo')->rows(5)->maxLength(5000),
+                    ]),
+                Section::make('Banner beranda')
+                    ->columnSpanFull()
+                    ->schema([
+                        TextInput::make('hero_title')->label('Judul banner')->maxLength(150)
+                            ->placeholder('Badan Eksekutif Mahasiswa Universitas Bhinneka Nusantara'),
+                        Textarea::make('hero_subtitle')->label('Subjudul banner')->rows(2)->maxLength(300),
+                        WebpImageUpload::make('hero_image', 'site', 1920)->label('Gambar latar banner'),
                     ]),
                 Section::make('Kontak & media sosial')
                     ->columns(2)
@@ -104,6 +123,13 @@ class ManageSettings extends Page
                         TextInput::make('social_instagram')->label('Instagram (URL)')->url()->maxLength(255),
                         TextInput::make('social_tiktok')->label('TikTok (URL)')->url()->maxLength(255),
                         TextInput::make('social_youtube')->label('YouTube (URL)')->url()->maxLength(255),
+                        TextInput::make('maps_embed_url')
+                            ->label('URL embed Google Maps')
+                            ->url()
+                            ->maxLength(1000)
+                            ->startsWith(['https://www.google.com/maps/embed'])
+                            ->helperText('Google Maps → Bagikan → Sematkan peta → salin alamat di dalam src="…".')
+                            ->columnSpanFull(),
                     ]),
                 Section::make('Keuangan')
                     ->columnSpanFull()
@@ -161,6 +187,12 @@ class ManageSettings extends Page
                 app(ActivityLogger::class)->log('setting.updated', null, ['keys' => $changed]);
             }
         });
+
+        // Gambar banner lama dihapus setelah diganti/dikosongkan.
+        $oldHero = $before['hero_image'] ?? null;
+        if (in_array('hero_image', $changed, true) && is_string($oldHero) && $oldHero !== '') {
+            Storage::disk('public')->delete($oldHero);
+        }
 
         Notification::make()->title('Pengaturan disimpan')->success()->send();
     }

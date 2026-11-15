@@ -22,4 +22,14 @@ class Division extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function programs(): HasMany
+    {
+        return $this->hasMany(Program::class);
+    }
+
+    public function structureMembers(): HasMany
+    {
+        return $this->hasMany(StructureMember::class);
+    }
 }

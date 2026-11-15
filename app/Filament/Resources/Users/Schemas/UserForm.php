@@ -3,15 +3,13 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\RoleName;
+use App\Filament\Support\WebpImageUpload;
 use App\Models\User;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Spatie\Permission\Models\Role;
 
 class UserForm
@@ -61,20 +59,9 @@ class UserForm
                 Section::make('Foto')
                     ->columnSpanFull()
                     ->schema([
-                        FileUpload::make('photo')
+                        WebpImageUpload::make('photo', 'users', 600)
                             ->label('Foto profil')
-                            ->image()
-                            ->avatar()
-                            ->disk('public')
-                            ->directory('users')
-                            ->visibility('public')
-                            ->maxSize(2048)
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                            ->rules(['mimes:jpg,jpeg,png,webp'])
-                            ->getUploadedFileNameForStorageUsing(
-                                fn (TemporaryUploadedFile $file): string => Str::uuid().'.'.($file->guessExtension() ?: 'jpg')
-                            )
-                            ->helperText('JPG/PNG/WebP, maksimal 2 MB.'),
+                            ->avatar(),
                     ]),
             ]);
     }

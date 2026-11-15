@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Periode kepengurusan (kabinet). Hanya satu yang boleh aktif;
@@ -39,5 +40,15 @@ class Period extends Model
     public static function current(): ?self
     {
         return static::query()->active()->first();
+    }
+
+    public function programs(): HasMany
+    {
+        return $this->hasMany(Program::class);
+    }
+
+    public function structureMembers(): HasMany
+    {
+        return $this->hasMany(StructureMember::class);
     }
 }

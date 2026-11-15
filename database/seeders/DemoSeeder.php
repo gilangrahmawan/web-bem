@@ -51,5 +51,7 @@ class DemoSeeder extends Seeder
         }
 
         $this->command?->info('Akun demo dibuat: {role}@demo.test (password = DEMO_PASSWORD).');
+
+        $this->call(DemoContentSeeder::class);
     }
 }
