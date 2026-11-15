@@ -47,6 +47,8 @@ class ActivityLog extends Model
             'auth.lockout' => 'Login dikunci',
             'auth.logout' => 'Logout',
             'auth.password_changed' => 'Ganti password',
+            'profile.photo_updated' => 'Foto profil diubah',
+            'profile.phone_updated' => 'Nomor HP diubah',
             'user.created' => 'User dibuat',
             'user.updated' => 'User diubah',
             'user.roles_changed' => 'Role user diubah',

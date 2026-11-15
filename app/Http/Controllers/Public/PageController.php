@@ -28,14 +28,14 @@ class PageController extends Controller
         if ($period) {
             $divisions = Division::query()
                 ->whereHas('structureMembers', fn ($q) => $q->where('period_id', $period->id))
-                ->with(['structureMembers' => fn ($q) => $q->where('period_id', $period->id)->orderBy('sort_order')->orderBy('id')])
+                ->with(['structureMembers' => fn ($q) => $q->where('period_id', $period->id)->with('user')->orderBy('sort_order')->orderBy('id')])
                 ->orderByRaw("CASE WHEN slug = 'bph' THEN 0 ELSE 1 END")
                 ->orderBy('id')
                 ->get();
         }
 
         $unassigned = $period
-            ? $period->structureMembers()->whereNull('division_id')->orderBy('sort_order')->get()
+            ? $period->structureMembers()->whereNull('division_id')->with('user')->orderBy('sort_order')->get()
             : collect();
 
         return view('public.structure', compact('period', 'divisions', 'unassigned'));

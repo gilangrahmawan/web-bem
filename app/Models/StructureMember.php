@@ -58,10 +58,16 @@ class StructureMember extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Urutan foto: foto struktur → foto profil akun yang ditautkan → avatar inisial.
+     * Muat relasi `user` lebih dulu (with('user')) agar tidak N+1.
+     */
     public function photoUrl(): string
     {
-        return $this->photo
-            ? Storage::disk('public')->url($this->photo)
+        $path = $this->photo ?: $this->user?->photo;
+
+        return $path
+            ? Storage::disk('public')->url($path)
             : InitialsAvatarProvider::forName($this->name);
     }
 }

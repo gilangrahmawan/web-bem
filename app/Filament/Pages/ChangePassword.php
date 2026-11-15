@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
-use App\Services\ActivityLogger;
 use App\Services\UserAccountService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -18,8 +17,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\Exposed;
 use Filament\Support\Components\Attributes\Unexposed;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 /**
@@ -121,18 +118,7 @@ class ChangePassword extends Page
         /** @var User $user */
         $user = Filament::auth()->user();
 
-        DB::transaction(function () use ($user, $data): void {
-            $user->forceFill([
-                'password' => $data['password'],
-                'must_change_password' => false,
-                'remember_token' => Str::random(60),
-            ])->save();
-
-            // Session lain diakhiri; session ini tetap (hash diperbarui oleh AuthenticateSession).
-            app(UserAccountService::class)->invalidateSessions($user, session()->getId());
-
-            app(ActivityLogger::class)->log('auth.password_changed', $user, [], $user);
-        });
+        app(UserAccountService::class)->changeOwnPassword($user, $data['password'], session()->getId());
 
         $this->form->fill();
 

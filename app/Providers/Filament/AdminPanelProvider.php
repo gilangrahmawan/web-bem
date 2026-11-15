@@ -4,7 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
 use App\Filament\AvatarProviders\InitialsAvatarProvider;
-use App\Filament\Pages\ChangePassword;
+use App\Filament\Pages\MyProfile;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsurePasswordChanged;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -51,10 +51,10 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Pengaturan'),
             ])
             ->userMenuItems([
-                Action::make('change-password')
-                    ->label('Ganti password')
-                    ->icon(Heroicon::OutlinedKey)
-                    ->url(fn (): string => ChangePassword::getUrl()),
+                Action::make('my-profile')
+                    ->label('Profil Saya')
+                    ->icon(Heroicon::OutlinedUserCircle)
+                    ->url(fn (): string => MyProfile::getUrl()),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

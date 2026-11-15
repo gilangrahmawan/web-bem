@@ -18,7 +18,7 @@ class DivisionController extends Controller
             : collect();
 
         $members = $period
-            ? $division->structureMembers()->where('period_id', $period->id)->orderBy('sort_order')->orderBy('id')->get()
+            ? $division->structureMembers()->where('period_id', $period->id)->with('user')->orderBy('sort_order')->orderBy('id')->get()
             : collect();
 
         return view('public.division', compact('division', 'period', 'programs', 'members'));

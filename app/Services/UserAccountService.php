@@ -104,6 +104,48 @@ class UserAccountService
         });
     }
 
+    /**
+     * Pengurus mengubah profilnya sendiri. Hanya foto & nomor HP yang boleh berubah;
+     * kunci lain diabaikan (nama, email, role, divisi tetap lewat Super Admin).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateOwnProfile(User $user, array $data): void
+    {
+        DB::transaction(function () use ($user, $data): void {
+            $user->forceFill(Arr::only($data, ['photo', 'phone']));
+            $changed = array_keys($user->getDirty());
+            $user->save();
+
+            // Nilai HP tidak dicatat (data sensitif), hanya fakta perubahannya.
+            if (in_array('photo', $changed, true)) {
+                $this->logger->log('profile.photo_updated', $user, [], $user);
+            }
+            if (in_array('phone', $changed, true)) {
+                $this->logger->log('profile.phone_updated', $user, [], $user);
+            }
+        });
+    }
+
+    /**
+     * Pengurus mengganti password sendiri. Kewajiban ganti password dicabut dan
+     * semua session lain diakhiri (session saat ini tetap; hash-nya diperbarui AuthenticateSession).
+     */
+    public function changeOwnPassword(User $user, string $newPassword, ?string $keepSessionId = null): void
+    {
+        DB::transaction(function () use ($user, $newPassword, $keepSessionId): void {
+            $user->forceFill([
+                'password' => $newPassword,
+                'must_change_password' => false,
+                'remember_token' => Str::random(60),
+            ])->save();
+
+            $this->invalidateSessions($user, $keepSessionId);
+
+            $this->logger->log('auth.password_changed', $user, [], $user);
+        });
+    }
+
     /** Mengembalikan password sementara (tampilkan sekali ke Super Admin). */
     public function resetPassword(User $actor, User $user): string
     {

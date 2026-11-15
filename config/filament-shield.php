@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Filament\Pages\ChangePassword;
 use App\Filament\Pages\ManageSettings;
+use App\Filament\Pages\MyProfile;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Resources\Divisions\DivisionResource;
 use App\Filament\Resources\Downloads\DownloadResource;
@@ -107,6 +108,7 @@ return [
         'exclude' => [
             Dashboard::class,
             ChangePassword::class,  // semua pengurus wajib bisa mengakses
+            MyProfile::class,       // semua pengurus (termasuk pembina) mengelola profilnya sendiri
             ManageSettings::class,  // dijaga permission kustom setting.manage
         ],
     ],
