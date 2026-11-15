@@ -76,6 +76,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(ActivityLog::class);
     }
 
+    /** Tugas konten Medpub yang ditugaskan ke user ini. */
+    public function taskAssignments(): HasMany
+    {
+        return $this->hasMany(EventAssignee::class);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $panel->getId() === 'admin'

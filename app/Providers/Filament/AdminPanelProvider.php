@@ -42,6 +42,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->sidebarCollapsibleOnDesktop()
+            // Lonceng notifikasi (channel database). Web Push menyusul di Fase 9.
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->navigationGroups([
                 NavigationGroup::make('BPH'),
                 NavigationGroup::make('Kajian'),

@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             RolePermissionSeeder::class,
             SuperAdminSeeder::class,
+            HolidaySeeder::class,
         ]);
 
         // Akun uji hanya di lokal. Jangan pernah di produksi.

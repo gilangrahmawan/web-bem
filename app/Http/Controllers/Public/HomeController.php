@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Enums\PostType;
 use App\Http\Controllers\Controller;
+use App\Models\Event;
 use App\Models\Gallery;
 use App\Models\Post;
 use Illuminate\Contracts\View\View;
@@ -34,6 +35,13 @@ class HomeController extends Controller
             ->limit(4)
             ->get();
 
-        return view('public.home', compact('latestNews', 'latestStudies', 'albums'));
+        $upcomingEvents = Event::query()
+            ->public()
+            ->upcoming()
+            ->orderBy('starts_at')
+            ->limit(5)
+            ->get();
+
+        return view('public.home', compact('latestNews', 'latestStudies', 'albums', 'upcomingEvents'));
     }
 }

@@ -17,7 +17,7 @@ class SeoController extends Controller
             $static = collect([
                 'public.home', 'public.profile', 'public.structure', 'public.news.index',
                 'public.studies.index', 'public.programs.index', 'public.galleries.index',
-                'public.downloads.index', 'public.contact',
+                'public.downloads.index', 'public.calendar', 'public.contact',
             ])->map(fn (string $name): array => ['loc' => route($name), 'lastmod' => null]);
 
             $posts = Post::query()->published()->latest('published_at')->get(['id', 'type', 'slug', 'updated_at'])

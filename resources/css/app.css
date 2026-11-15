@@ -100,3 +100,26 @@
         @apply overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100;
     }
 }
+
+/* Kalender publik (FullCalendar menyuntikkan CSS dasarnya sendiri; di sini hanya warna BEM). */
+.bem-fc .fc {
+    --fc-border-color: var(--color-slate-200);
+    --fc-today-bg-color: color-mix(in srgb, var(--color-brand-accent) 18%, transparent);
+    --fc-button-bg-color: var(--color-brand-primary);
+    --fc-button-border-color: var(--color-brand-primary);
+    --fc-button-hover-bg-color: var(--color-brand-secondary);
+    --fc-button-hover-border-color: var(--color-brand-secondary);
+    --fc-button-active-bg-color: var(--color-brand-secondary);
+    --fc-button-active-border-color: var(--color-brand-secondary);
+    font-size: 0.875rem;
+}
+
+.bem-fc .fc .fc-toolbar-title {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--color-brand-primary);
+}
+
+.bem-fc .fc-event {
+    cursor: pointer;
+}

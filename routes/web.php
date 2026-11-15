@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Panel\TaskResultController;
+use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Public\DivisionController;
 use App\Http\Controllers\Public\DownloadController;
 use App\Http\Controllers\Public\GalleryController;
@@ -9,6 +11,9 @@ use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\ProgramController;
 use App\Http\Controllers\Public\SeoController;
 use App\Http\Controllers\Public\StudyController;
+use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\EnsurePasswordChanged;
+use Filament\Http\Middleware\SetUpPanel;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,9 +44,13 @@ Route::name('public.')->group(function (): void {
         ->middleware('throttle:30,1')
         ->name('downloads.file');
 
-    // Placeholder "segera hadir" — diganti di Fase 3 (kalender), 5 (aspirasi), 7 (pengajuan & oprec).
+    Route::get('/kalender', [CalendarController::class, 'index'])->name('calendar');
+    Route::get('/kalender/agenda', [CalendarController::class, 'feed'])
+        ->middleware('throttle:60,1')
+        ->name('calendar.feed');
+
+    // Placeholder "segera hadir" — diganti di Fase 5 (aspirasi), 7 (pengajuan & oprec).
     $soon = [
-        'calendar' => ['/kalender', 'Kalender Kegiatan'],
         'aspirations.create' => ['/aspirasi', 'Kirim Aspirasi'],
         'aspirations.status' => ['/aspirasi/status', 'Cek Status Aspirasi'],
         'submissions.create' => ['/pengajuan', 'Pengajuan Proposal & LPJ'],
@@ -54,6 +63,16 @@ Route::name('public.')->group(function (): void {
         Route::get($uri, [PageController::class, 'comingSoon'])->defaults('title', $title)->name($name);
     }
 });
+
+/*
+| Unduhan berkas privat dashboard (di luar Livewire). Login wajib; otorisasi lewat policy.
+*/
+Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswordChanged::class])
+    ->prefix('panel-bem')->name('panel.')->group(function (): void {
+        Route::get('/tugas/{assignee}/hasil', TaskResultController::class)
+            ->whereNumber('assignee')
+            ->name('tasks.result');
+    });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');

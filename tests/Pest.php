@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\RoleName;
+use App\Models\Division;
 use App\Models\User;
 use Database\Seeders\DivisionSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -52,4 +53,18 @@ function nonSuperAdminRoles(): array
 function livewire(string $component, array $params = []): Testable
 {
     return Livewire\Livewire::test($component, $params);
+}
+
+/** ID divisi bawaan berdasarkan slug (bph, kajian, medpub, humas). */
+function divisionId(string $slug): int
+{
+    return (int) Division::query()->where('slug', $slug)->value('id');
+}
+
+/** User dengan role bawaan yang otomatis ditempatkan di divisi default role tersebut. */
+function member(RoleName $role, array $attributes = []): User
+{
+    $slug = $role->divisionSlug();
+
+    return userWithRole($role, [...($slug ? ['division_id' => divisionId($slug)] : []), ...$attributes]);
 }

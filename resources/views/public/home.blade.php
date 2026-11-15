@@ -93,16 +93,27 @@
         </a>
     </section>
 
-    {{-- Agenda terdekat (Fase 3) + Kajian terbaru --}}
+    {{-- Agenda terdekat + Kajian terbaru --}}
     <section class="bg-slate-50 py-16">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
             <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
-                <div class="flex items-center gap-3">
-                    <span class="flex size-11 items-center justify-center rounded-xl bg-brand-accent text-brand-primary"><x-public.icon name="calendar" class="size-6" /></span>
-                    <h2 class="text-xl font-extrabold text-brand-primary">Agenda Terdekat</h2>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="flex size-11 items-center justify-center rounded-xl bg-brand-accent text-brand-primary"><x-public.icon name="calendar" class="size-6" /></span>
+                        <h2 class="text-xl font-extrabold text-brand-primary">Agenda Terdekat</h2>
+                    </div>
+                    <a href="{{ route('public.calendar') }}" class="text-sm font-semibold text-brand-primary hover:text-brand-secondary">Kalender</a>
                 </div>
-                <x-public.empty-state class="mt-6" icon="clock" title="Kalender kegiatan segera hadir"
-                    message="Agenda BEM, kampus, dan UKM akan tampil di sini." />
+                @if ($upcomingEvents->isNotEmpty())
+                    <ul class="mt-6 divide-y divide-slate-100">
+                        @foreach ($upcomingEvents as $event)
+                            @include('public.partials.event-item', ['event' => $event])
+                        @endforeach
+                    </ul>
+                @else
+                    <x-public.empty-state class="mt-6" icon="clock" title="Belum ada agenda terdekat"
+                        message="Agenda BEM, kampus, dan UKM akan tampil di sini." />
+                @endif
             </div>
 
             <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
