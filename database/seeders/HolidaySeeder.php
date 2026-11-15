@@ -4,17 +4,24 @@ namespace Database\Seeders;
 
 use App\Enums\EventCategory;
 use App\Models\Event;
+use App\Services\ActivityLogger;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
- * Hari libur nasional 2026 & 2027 (data manual, tanpa API eksternal). Kategori `holiday`, tampil publik.
+ * Hari libur nasional (& cuti bersama bila ditambahkan) 2026–2027. Data manual, tanpa API eksternal.
+ * Kategori `holiday`, tampil publik. Satu-satunya sumber libur nasional di aplikasi.
  *
  * ⚠ PERLU DIVERIFIKASI: tanggal libur KEAGAMAAN (ditandai 'verify' => true) diisi dari perkiraan
- * kalender hijriah/lunar, bukan dari SKB 3 Menteri resmi. Cocokkan dengan SKB libur nasional &
- * cuti bersama tahun bersangkutan, lalu koreksi lewat Kalender di dashboard. Cuti bersama tidak dimasukkan.
+ * kalender hijriah/lunar, bukan dari SKB 3 Menteri resmi. Perbaiki daftar HOLIDAYS di bawah sesuai SKB,
+ * lalu jalankan ulang seeder ini.
  *
- * Aman dijalankan berulang (juga di database produksi): agenda dicari berdasarkan judul,
- * jadi tanggal yang sudah dikoreksi di dashboard TIDAK ditimpa.
+ * MODE SINKRON (keputusan pemilik): daftar HOLIDAYS adalah sumber kebenaran untuk libur milik seeder.
+ * - Upsert berdasarkan judul: tanggal/penyelenggara mengikuti daftar (deskripsi & lokasi tidak disentuh).
+ * - Libur milik seeder yang judulnya tidak ada lagi di daftar (mis. hasil perkiraan lama) DIHAPUS.
+ * - Cakupan HANYA agenda kategori `holiday` yang dibuat seeder (created_by = null). Agenda kategori lain
+ *   (commemoration, campus, dll.) dan libur yang ditambahkan manual lewat dashboard tidak pernah disentuh.
  */
 class HolidaySeeder extends Seeder
 {
@@ -59,29 +66,71 @@ class HolidaySeeder extends Seeder
         ['2027-12-25', 'Hari Raya Natal 2027'],
     ];
 
-    public function run(): void
+    public function run(ActivityLogger $logger): void
     {
-        $created = 0;
-        $toVerify = 0;
+        $summary = DB::transaction(function (): array {
+            $keptIds = [];
+            $created = 0;
+            $updated = 0;
 
-        foreach (self::HOLIDAYS as $row) {
-            [$date, $title] = $row;
+            foreach (self::HOLIDAYS as $row) {
+                [$date, $title] = $row;
 
-            $event = Event::query()->firstOrCreate(
-                ['category' => EventCategory::Holiday->value, 'title' => $title],
-                [
-                    'visibility' => EventCategory::Holiday->visibility()->value,
+                $event = self::seederHolidays()->where('title', $title)->orderBy('id')->first()
+                    ?? new Event(['category' => EventCategory::Holiday, 'title' => $title]);
+
+                $event->fill([
+                    'visibility' => EventCategory::Holiday->visibility(),
                     'starts_at' => $date.' 00:00:00',
+                    'ends_at' => null,
                     'all_day' => true,
                     'organizer' => 'Pemerintah RI',
-                ],
-            );
+                ]);
 
-            $created += $event->wasRecentlyCreated ? 1 : 0;
-            $toVerify += ($row[2] ?? false) ? 1 : 0;
+                if (! $event->exists) {
+                    $created++;
+                } elseif ($event->isDirty()) {
+                    $updated++;
+                }
+
+                $event->save();
+                $keptIds[] = $event->getKey();
+            }
+
+            // Libur lama milik seeder yang tidak ada lagi di daftar (termasuk judul ganda).
+            $stale = self::seederHolidays()->whereNotIn('id', $keptIds);
+            $deletedTitles = $stale->clone()->orderBy('starts_at')->pluck('title')->all();
+            $stale->delete();
+
+            return ['created' => $created, 'updated' => $updated, 'deleted' => count($deletedTitles), 'deleted_titles' => $deletedTitles];
+        });
+
+        if ($summary['created'] + $summary['updated'] + $summary['deleted'] > 0) {
+            $logger->log('holiday.synced', null, $summary);
         }
 
-        $this->command?->info("Hari libur: {$created} agenda baru (".count(self::HOLIDAYS).' total di data).');
+        $toVerify = count(array_filter(self::HOLIDAYS, fn (array $row): bool => $row[2] ?? false));
+
+        $this->command?->info("Hari libur: {$summary['created']} baru, {$summary['updated']} diperbarui, "
+            ."{$summary['deleted']} dihapus (".count(self::HOLIDAYS).' total di data).');
+
+        foreach ($summary['deleted_titles'] as $title) {
+            $this->command?->line("  - dihapus: {$title}");
+        }
+
         $this->command?->warn("{$toVerify} tanggal libur keagamaan perlu diverifikasi dengan SKB 3 Menteri.");
+    }
+
+    /**
+     * Satu-satunya cakupan yang boleh diubah/dihapus seeder ini:
+     * kategori `holiday` DAN dibuat oleh seeder (bukan oleh pengurus lewat dashboard).
+     *
+     * @return Builder<Event>
+     */
+    private static function seederHolidays(): Builder
+    {
+        return Event::query()
+            ->where('category', EventCategory::Holiday->value)
+            ->whereNull('created_by');
     }
 }
