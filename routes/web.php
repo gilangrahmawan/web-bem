@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Panel\AnnouncementAttachmentController;
+use App\Http\Controllers\Panel\PostImageController;
 use App\Http\Controllers\Panel\TaskResultController;
 use App\Http\Controllers\Public\AspirationController;
 use App\Http\Controllers\Public\CalendarController;
@@ -85,6 +86,9 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
         Route::get('/pesan/{announcement}/lampiran', AnnouncementAttachmentController::class)
             ->whereNumber('announcement')
             ->name('announcements.attachment');
+        Route::get('/konten/{post}/gambar', PostImageController::class)
+            ->whereNumber('post')
+            ->name('posts.image');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

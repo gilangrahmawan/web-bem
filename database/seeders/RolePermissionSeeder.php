@@ -61,13 +61,13 @@ class RolePermissionSeeder extends Seeder
                 'chat.use',
             ],
             RoleName::KoordinatorKajian->value => [
-                'discussion.create', 'discussion.set_docs_link', 'discussion.manage_all',
+                'discussion.create', 'discussion.set_docs_link', 'discussion.manage_all', 'post.create_study',
                 'aspiration.study', 'event.create_meeting',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
             ],
             RoleName::AnggotaKajian->value => [
-                'discussion.create', 'aspiration.view',
+                'discussion.create', 'aspiration.view', 'post.create_study',
                 'chat.use',
             ],
             RoleName::KoordinatorMedpub->value => [

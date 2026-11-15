@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Enums\PostCategory;
 use App\Enums\PostStatus;
 use App\Enums\PostType;
+use App\Policies\PostPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,6 +22,11 @@ use Illuminate\Support\Str;
 class Post extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /** Disk gambar asli resolusi penuh (privat; diunduh lewat PostOriginalImageController). */
+    public const ORIGINAL_DISK = 'local';
+
+    public const ORIGINAL_DIRECTORY = 'post-originals';
 
     /** @var list<string> */
     protected $fillable = [
@@ -41,6 +48,7 @@ class Post extends Model
             'type' => PostType::class,
             'status' => PostStatus::class,
             'category' => PostCategory::class,
+            'review_round' => 'integer',
             'published_at' => 'datetime',
             'social_posted_at' => 'datetime',
         ];
@@ -54,6 +62,50 @@ class Post extends Model
                 $post->body = clean($post->body, 'post');
             }
         });
+
+        // Cover diganti/dihapus: buang WebP lama (public) dan gambar asli lama (privat).
+        static::updated(function (Post $post): void {
+            if ($post->wasChanged('cover') && $old = $post->getOriginal('cover')) {
+                Storage::disk('public')->delete($old);
+            }
+
+            if ($post->wasChanged('cover_original_path') && $old = $post->getOriginal('cover_original_path')) {
+                Storage::disk(self::ORIGINAL_DISK)->delete($old);
+            }
+        });
+
+        static::forceDeleted(function (Post $post): void {
+            Storage::disk('public')->delete(array_filter([$post->cover, $post->attachment_path]));
+            Storage::disk(self::ORIGINAL_DISK)->delete(array_filter([$post->cover_original_path]));
+        });
+    }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(PostApproval::class)->orderBy('id');
+    }
+
+    public function eventAssignee(): BelongsTo
+    {
+        return $this->belongsTo(EventAssignee::class);
+    }
+
+    /**
+     * Konten yang boleh dilihat user di dashboard (keputusan pemilik Fase 6):
+     * draft & revisi hanya untuk penulis, Koordinator Medpub, dan super_admin;
+     * konten yang sudah diajukan terlihat semua pengurus (read-only).
+     *
+     * @param  Builder<Post>  $query
+     */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        if (PostPolicy::seesAllDrafts($user)) {
+            return;
+        }
+
+        $query->where(fn (Builder $q) => $q
+            ->where('author_id', $user->getKey())
+            ->orWhereNotIn('status', [PostStatus::Draft->value, PostStatus::Revision->value]));
     }
 
     public function author(): BelongsTo

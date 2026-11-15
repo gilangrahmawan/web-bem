@@ -19,11 +19,13 @@ use App\Filament\Resources\Dues\DueResource;
 use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Letters\LetterResource;
 use App\Filament\Resources\Periods\PeriodResource;
+use App\Filament\Resources\Posts\PostResource;
 use App\Filament\Resources\Programs\ProgramResource;
 use App\Filament\Resources\StructureMembers\StructureMemberResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Widgets\AspirationStatusChart;
 use App\Filament\Widgets\AspirationWeeklyChart;
+use App\Filament\Widgets\ContentQueueWidget;
 use App\Filament\Widgets\DiscussionStatusChart;
 use App\Filament\Widgets\DuesProgressChart;
 use App\Filament\Widgets\InboxStatsWidget;
@@ -33,6 +35,9 @@ use App\Filament\Widgets\KasStatusChart;
 use App\Filament\Widgets\KasWeeklyChart;
 use App\Filament\Widgets\MessageReadRateChart;
 use App\Filament\Widgets\MyKasWidget;
+use App\Filament\Widgets\MyPostsChart;
+use App\Filament\Widgets\PostsPublishedChart;
+use App\Filament\Widgets\PostStatusChart;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -125,6 +130,8 @@ return [
             DiscussionResource::class,
             AnnouncementResource::class,
             LetterResource::class,
+            // Fase 6: dijaga PostPolicy + permission kustom post.*.
+            PostResource::class,
         ],
     ],
 
@@ -162,6 +169,11 @@ return [
             InboxStatsWidget::class,
             MessageReadRateChart::class,
             DiscussionStatusChart::class,
+            // Widget Fase 6.
+            PostStatusChart::class,
+            PostsPublishedChart::class,
+            ContentQueueWidget::class,
+            MyPostsChart::class,
         ],
     ],
 
@@ -183,6 +195,7 @@ return [
         'discussion.manage_all' => 'Kelola semua pembahasan',
         'post.create' => 'Buat konten',
         'post.create_press_release' => 'Buat press release',
+        'post.create_study' => 'Buat kajian publik',
         'post.approve_coordinator' => 'Setujui konten (koordinator)',
         'post.approve_leader' => 'Setujui konten (ketua/wakil)',
         'post.publish' => 'Terbitkan konten',

@@ -29,7 +29,7 @@ it('membuat 10 role bawaan dan semua permission kustom', function (): void {
         expect(Role::where('name', $role->value)->exists())->toBeTrue();
     }
 
-    expect(RolePermissionSeeder::customPermissions())->toHaveCount(34);
+    expect(RolePermissionSeeder::customPermissions())->toHaveCount(35);
 
     foreach (RolePermissionSeeder::customPermissions() as $permission) {
         expect(Permission::where('name', $permission)->exists())->toBeTrue();

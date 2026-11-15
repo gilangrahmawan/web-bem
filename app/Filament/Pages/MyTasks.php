@@ -3,11 +3,15 @@
 namespace App\Filament\Pages;
 
 use App\Enums\EventCategory;
+use App\Enums\PostType;
 use App\Enums\RoleName;
 use App\Enums\TaskStatus;
+use App\Filament\Resources\Posts\PostResource;
 use App\Models\Event;
 use App\Models\EventAssignee;
+use App\Models\Post;
 use App\Models\User;
+use App\Services\PostContentService;
 use App\Services\TaskService;
 use App\Support\Format;
 use BackedEnum;
@@ -237,6 +241,24 @@ class MyTasks extends Page implements HasTable
                         && ! $this->owns($record)
                         && $this->user()->can('review', $record))
                     ->action(fn (EventAssignee $record) => $this->run(fn () => app(TaskService::class)->review($this->user(), $record, TaskStatus::InProgress), 'Tugas dikembalikan')),
+                Action::make('draftPost')
+                    ->label('Buat draft konten')
+                    ->icon(Heroicon::OutlinedNewspaper)
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->modalDescription('Membuat draft Postingan tertaut tugas ini. Hasil berupa gambar dipakai sebagai cover (file asli disimpan untuk medsos).')
+                    ->visible(fn (EventAssignee $record): bool => $record->status === TaskStatus::Submitted
+                        && $this->user()->can('review', $record)
+                        && $this->user()->can('createType', [Post::class, PostType::Social])
+                        && ! Post::query()->where('event_assignee_id', $record->getKey())->exists())
+                    ->action(function (EventAssignee $record): void {
+                        $post = null;
+                        $this->run(function () use ($record, &$post): void {
+                            $post = app(PostContentService::class)->draftFromTask($this->user(), $record);
+                        }, 'Draft konten dibuat');
+
+                        $this->redirect(PostResource::getUrl('view', ['record' => $post]));
+                    }),
             ])
             ->emptyStateHeading('Belum ada tugas')
             ->emptyStateDescription('Tugas konten yang ditugaskan kepada Anda akan tampil di sini.')
