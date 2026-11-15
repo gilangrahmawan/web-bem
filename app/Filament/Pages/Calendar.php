@@ -8,6 +8,7 @@ use App\Models\Division;
 use App\Models\Event;
 use App\Models\User;
 use App\Policies\EventPolicy;
+use App\Services\CalendarImportService;
 use App\Services\EventConflictService;
 use App\Services\EventService;
 use App\Support\CalendarFeed;
@@ -15,6 +16,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -27,10 +29,14 @@ use Filament\Support\Components\Attributes\Exposed;
 use Filament\Support\Exceptions\Halt;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
  * Kalender dashboard (AGENTS.md C4). Agenda yang tampil dibatasi Event::visibleTo();
@@ -63,6 +69,13 @@ class Calendar extends Page
     /** Agenda yang sedang dibuka di modal ubah. */
     #[Locked]
     public ?int $activeEventId = null;
+
+    /**
+     * Pratinjau impor CSV yang menunggu konfirmasi: ['file' => string, 'rows' => list<array>].
+     * Saat disimpan, setiap baris divalidasi & dicek duplikat ulang di CalendarImportService.
+     */
+    #[Locked]
+    public ?array $importPreview = null;
 
     public static function canAccess(): bool
     {
@@ -120,7 +133,108 @@ class Calendar extends Page
 
     protected function getHeaderActions(): array
     {
-        return [$this->createEventAction()];
+        return [$this->importCsvAction(), $this->createEventAction()];
+    }
+
+    /** Langkah 1: unggah CSV → validasi → pratinjau (belum menyimpan). */
+    public function importCsvAction(): Action
+    {
+        return Action::make('importCsv')
+            ->label('Impor CSV')
+            ->icon(Heroicon::OutlinedArrowUpTray)
+            ->color('gray')
+            ->authorize(fn (): bool => $this->user()->can('import', Event::class))
+            ->modalHeading('Impor agenda dari CSV')
+            ->modalDescription('Untuk kalender akademik, hari peringatan, atau kegiatan BEM/UKM. Libur nasional & cuti bersama tidak diimpor di sini.')
+            ->modalSubmitActionLabel('Periksa file')
+            ->schema([
+                FileUpload::make('file')
+                    ->label('File CSV')
+                    ->required()
+                    ->storeFiles(false)
+                    ->maxSize(1024)
+                    ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'])
+                    ->rules(['mimes:csv,txt'])
+                    ->helperText(new HtmlString(
+                        'Maksimal 1 MB, UTF-8, pemisah koma atau titik koma. Header wajib: '
+                        .'<code>'.e(implode(',', CalendarImportService::COLUMNS)).'</code>. '
+                        .'Tanggal YYYY-MM-DD; end_date boleh kosong. Kategori: '
+                        .e(implode(', ', array_map(fn (EventCategory $c) => $c->value, EventCategory::importableCases()))).'.'
+                    )),
+            ])
+            ->action(function (array $data): void {
+                $file = Arr::first(Arr::wrap($data['file'] ?? null));
+
+                if (! $file instanceof TemporaryUploadedFile) {
+                    Notification::make()->title('File tidak terbaca')->danger()->send();
+
+                    throw new Halt;
+                }
+
+                try {
+                    $rows = app(CalendarImportService::class)->parse((string) $file->get());
+                } catch (ValidationException $e) {
+                    Notification::make()->title('File CSV tidak valid')
+                        ->body(collect($e->errors())->flatten()->first())
+                        ->danger()
+                        ->persistent()
+                        ->send();
+
+                    throw new Halt;
+                } finally {
+                    $file->delete(); // file tidak disimpan
+                }
+
+                $this->importPreview = [
+                    'file' => Str::limit($file->getClientOriginalName(), 150, ''),
+                    'rows' => $rows,
+                ];
+
+                $this->replaceMountedAction('confirmImport');
+            });
+    }
+
+    /** Langkah 2: pratinjau + jumlah valid/duplikat/tidak valid → simpan baris valid. */
+    public function confirmImportAction(): Action
+    {
+        return Action::make('confirmImport')
+            ->authorize(fn (): bool => $this->user()->can('import', Event::class))
+            ->modalHeading(fn (): string => 'Pratinjau impor — '.($this->importPreview['file'] ?? 'CSV'))
+            ->modalWidth('5xl')
+            ->modalContent(fn () => view('filament.pages.partials.import-preview', [
+                'rows' => $this->importPreview['rows'] ?? [],
+                'counts' => CalendarImportService::counts($this->importPreview['rows'] ?? []),
+            ]))
+            ->modalSubmitAction(function (Action $action): Action|false {
+                $valid = CalendarImportService::counts($this->importPreview['rows'] ?? [])['valid'];
+
+                return $valid > 0 ? $action->label("Simpan {$valid} agenda") : false;
+            })
+            ->modalCancelActionLabel('Batal')
+            ->action(function (): void {
+                $preview = $this->importPreview;
+                $this->importPreview = null;
+
+                if ($preview === null) {
+                    return;
+                }
+
+                try {
+                    $summary = app(CalendarImportService::class)->import($this->user(), $preview['rows'], $preview['file']);
+                } catch (AuthorizationException) {
+                    Notification::make()->title('Tidak diizinkan mengimpor agenda')->danger()->send();
+
+                    return;
+                }
+
+                Notification::make()
+                    ->title("{$summary['created']} agenda diimpor")
+                    ->body("Duplikat dilewati: {$summary['duplicate']} · Tidak valid: {$summary['invalid']}")
+                    ->success()
+                    ->send();
+
+                $this->dispatch('bem-calendar-refresh');
+            });
     }
 
     public function createEventAction(): Action

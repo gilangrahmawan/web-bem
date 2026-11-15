@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             SuperAdminSeeder::class,
             HolidaySeeder::class,
+            CalendarCsvSeeder::class,
         ]);
 
         // Akun uji hanya di lokal. Jangan pernah di produksi.

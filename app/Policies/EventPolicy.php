@@ -41,6 +41,12 @@ class EventPolicy
         return $category !== null && $user->can($category->requiredPermission());
     }
 
+    /** Impor CSV kalender akademik/hari peringatan: super_admin & sekretaris. */
+    public function import(User $user): bool
+    {
+        return $user->can('event.create_public');
+    }
+
     public function update(User $user, Event $event): bool
     {
         return $this->manages($user, $event);

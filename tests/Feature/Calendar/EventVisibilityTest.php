@@ -33,7 +33,7 @@ it('endpoint publik hanya mengembalikan kategori publik', function (): void {
         ->pluck('extendedProps.category')
         ->sort()->values()->all();
 
-    expect($categories)->toBe(['bem', 'campus', 'holiday', 'ukm']);
+    expect($categories)->toBe(['bem', 'campus', 'commemoration', 'holiday', 'ukm']);
 });
 
 it('endpoint publik menolak rentang tidak valid atau terlalu panjang', function (array $query): void {

@@ -15,6 +15,7 @@ enum EventCategory: string
     case Meeting = 'meeting';
     case Content = 'content';
     case Internal = 'internal';
+    case Commemoration = 'commemoration';
 
     public function label(): string
     {
@@ -26,6 +27,7 @@ enum EventCategory: string
             self::Meeting => 'Rapat',
             self::Content => 'Tugas Konten Medpub',
             self::Internal => 'Internal Lainnya',
+            self::Commemoration => 'Hari Peringatan',
         };
     }
 
@@ -40,6 +42,7 @@ enum EventCategory: string
             self::Meeting => 'warning',
             self::Content => 'info',
             self::Internal => 'gray',
+            self::Commemoration => 'info',
         };
     }
 
@@ -54,6 +57,7 @@ enum EventCategory: string
             self::Meeting => '#b45309',
             self::Content => '#7c3aed',
             self::Internal => '#64748b',
+            self::Commemoration => '#db2777',
         };
     }
 
@@ -85,7 +89,7 @@ enum EventCategory: string
     public function requiredPermission(): string
     {
         return match ($this) {
-            self::Holiday, self::Campus, self::Bem => 'event.create_public',
+            self::Holiday, self::Campus, self::Bem, self::Commemoration => 'event.create_public',
             self::Ukm => 'event.create_ukm',
             // Keputusan pemilik: kategori `internal` memakai izin yang sama dengan rapat.
             self::Meeting, self::Internal => 'event.create_meeting',
@@ -96,7 +100,18 @@ enum EventCategory: string
     /** @return list<self> */
     public static function publicCases(): array
     {
-        return [self::Holiday, self::Campus, self::Bem, self::Ukm];
+        return [self::Holiday, self::Commemoration, self::Campus, self::Bem, self::Ukm];
+    }
+
+    /**
+     * Kategori yang boleh masuk lewat impor CSV (keputusan pemilik).
+     * `holiday` sengaja tidak termasuk: libur nasional & cuti bersama hanya dari HolidaySeeder.
+     *
+     * @return list<self>
+     */
+    public static function importableCases(): array
+    {
+        return [self::Campus, self::Commemoration, self::Bem, self::Ukm];
     }
 
     /** @return list<self> */
