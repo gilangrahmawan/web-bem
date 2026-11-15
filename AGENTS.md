@@ -215,6 +215,7 @@ tests/Feature
 - Dashboard: navigasi dikelompokkan **BPH, Kajian, Medpub, Humas, Komunikasi, Pengaturan**. Menu tanpa izin tidak tampil.
 - Status tampil sebagai badge berwarna. Aksi berbahaya pakai modal konfirmasi.
 - Beranda dashboard per role: Tugas Saya, Kas Saya, Kotak Masuk belum dibaca, Konten menunggu persetujuan (Medpub/Super Admin), Aspirasi baru (Humas), Eskalasi (Super Admin).
+- Setiap role punya widget grafik di beranda dashboard (lihat C1). Widget mengikuti hak akses, punya tampilan kosong yang rapi, dan memakai warna brand.
 
 ---
 
@@ -232,6 +233,8 @@ Keputusan final:
 - Notifikasi: **push notification (PWA) + lonceng dashboard**. Tidak memakai WhatsApp.
 - **Chat personal privat** (Super Admin tidak bisa membaca).
 - Agenda UKM **boleh bentrok**, tapi wajib peringatan + konfirmasi.
+- **Drive internal mirip Google Drive** (rincian di Fase 8): sidebar "+ Baru", Drive Saya, Dibagikan kepada saya, Terbaru, Berbintang, Sampah, bar pemakaian penyimpanan; kartu dengan thumbnail; grid/daftar; menu titik tiga; drag & drop; bintang per user. Berkas Unduhan publik (Fase 2) tetap terpisah dari Drive.
+- **Semua role punya dashboard dengan grafik** (Filament `ChartWidget` / `StatsOverviewWidget`). Mulai Fase 4, setiap fase wajib menambah widget grafik untuk modulnya. Data grafik mengikuti hak akses (anggota hanya datanya sendiri, koordinator hanya divisinya); tampilan kosong rapi bila belum ada data; warna mengikuti warna brand. Fase 10 memeriksa ulang setiap role punya minimal satu grafik.
 
 Asumsi (tanyakan di awal Fase 7): proposal/LPJ diajukan **pihak luar BEM** (UKM, HMJ, panitia) lewat form publik tanpa login.
 
@@ -509,7 +512,8 @@ Pemilik memanggil dengan kalimat: **"Kerjakan Fase N sesuai AGENTS.md."** Setiap
 3. Halaman **Kas Mingguan** (grid, klik sel, total, tunggakan merah, filter divisi, export), resource **Iuran Tambahan**, pengaturan nominal.
 4. Widget **Kas Saya** untuk semua pengurus.
 5. Notifikasi: `KasPaidNotification` ("Terima kasih, {nama}! Pembayaran kas minggu ke-{n} sebesar Rp5.000 sudah kami terima."), pengingat tunggakan (Senin 08:00 WIB), rekap bulanan ke Bendahara.
-6. Test: tunggakan benar; anggota tak bisa melihat kas orang lain; pembayaran ganda minggu yang sama ditolak.
+6. Widget grafik: Bendahara & Super Admin — kartu ringkasan (total kas terkumpul, total tunggakan, jumlah pengurus lunas), kas masuk per minggu (batang), lunas vs menunggak (donat), tunggakan per divisi (batang), progres tiap iuran tambahan. Pembina — grafik yang sama, read-only. Semua pengurus — "Kas Saya" (progres minggu dibayar & sisa tunggakan).
+7. Test: tunggakan benar; anggota tak bisa melihat kas orang lain; pembayaran ganda minggu yang sama ditolak.
 
 ## Fase 5 — Humas, Kajian, Pengumuman & Surat
 
@@ -537,7 +541,13 @@ Pemilik memanggil dengan kalimat: **"Kerjakan Fase N sesuai AGENTS.md."** Setiap
 ## Fase 8 — Drive & Dokumen
 
 1. Migration/model `folders`, `files`, `folder_permissions`; `DriveService` (CRUD folder, cegah pindah ke turunan sendiri, upload, trash, restore, hapus permanen, kuota, ZIP streaming); policy dengan pewarisan izin.
-2. Halaman kustom **Drive**: breadcrumb, grid/list, drag & drop multi-file, preview modal, aksi rename/pindah/unduh/bagikan/hapus, cari, halaman Trash, indikator kuota. Scheduler hapus permanen trash > 30 hari. Folder sistem "Surat" + sambungkan hook Fase 5.
+2. Halaman kustom **Drive** bergaya Google Drive:
+   - Sidebar: tombol **"+ Baru"** (folder baru, upload, dokumen baru), **Drive Saya**, **Dibagikan kepada saya**, **Terbaru**, **Berbintang**, **Sampah**, dan bar pemakaian penyimpanan.
+   - Halaman utama: **"Folder yang disarankan"** dan **"File terbaru"** berupa kartu dengan pratinjau thumbnail (gambar & halaman pertama PDF) atau ikon jenis file.
+   - Tombol tampilan grid/daftar, pencarian, breadcrumb, drag & drop upload multi-file, preview modal.
+   - Menu titik tiga per item: buka, unduh, ganti nama, pindah, bagikan, beri bintang, hapus. **Bintang disimpan per user** (tabel tersendiri).
+   - Tetap mengikuti aturan keamanan B4 (disk privat, unduh lewat controller berotorisasi, validasi mimes + mimetypes). Berkas Unduhan publik (Fase 2) tetap terpisah dari Drive.
+   - Scheduler hapus permanen trash > 30 hari. Folder sistem "Surat" + sambungkan hook Fase 5.
 3. **Dokumen**: `documents`, `document_versions`, `document_templates`; editor tersanitasi; auto-save ±10 detik (versi maks 1/menit/user); kunci dokumen 15 menit; riwayat versi & pulihkan; template kop BEM; export PDF & DOCX; tampil sebagai item di Drive.
 4. Test: tak bisa unduh berkas tanpa izin walau menebak ID; folder tak bisa dipindah ke dirinya; dokumen terkunci tak bisa disimpan user lain.
 
@@ -554,6 +564,7 @@ Pemilik memanggil dengan kalimat: **"Kerjakan Fase N sesuai AGENTS.md."** Setiap
 2. Backup (`spatie/laravel-backup`): database harian, berkas mingguan, ke disk terpisah (siap R2), notifikasi gagal ke super_admin.
 3. Audit keamanan (laporkan dalam tabel temuan/file/perbaikan): policy & test di setiap resource; aturan upload; tak ada `{!! !!}` tanpa sanitasi; Turnstile & rate limit; security headers; cookie secure/httponly; `composer audit` & `npm audit`.
 4. Performa: index, eager loading, `config:cache`/`route:cache`/`view:cache`.
+4a. Cek ulang dashboard: setiap role (termasuk pembina) punya minimal satu widget grafik yang mengikuti hak aksesnya; tambahkan bila belum.
 5. Tulis `docs/DEPLOY.md` (syarat hosting; clone; `composer install --no-dev --optimize-autoloader`; `npm run build` di lokal lalu upload `public/build` bila hosting tanpa Node; `.env` produksi; `key:generate`; `migrate --force`; seeder tanpa DemoSeeder; `storage:link`; document root ke `public/`; cron `* * * * * cd /path && php artisan schedule:run >> /dev/null 2>&1`; checklist `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, Cloudflare, kredensial Pusher/VAPID/Turnstile).
 6. Tulis `docs/PANDUAN-PENGURUS.md` (login pertama, aktifkan notifikasi, panduan per role).
 
