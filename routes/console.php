@@ -36,3 +36,9 @@ Schedule::command('recruitment:purge-personal-data')
     ->dailyAt('02:00')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
+
+// Hapus permanen isi Sampah Drive yang lebih dari 30 hari.
+Schedule::command('drive:purge-trash')
+    ->dailyAt('02:30')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();

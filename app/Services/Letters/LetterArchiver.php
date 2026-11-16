@@ -7,9 +7,8 @@ use App\Models\Announcement;
 /**
  * Arsip otomatis surat Humas ke folder Drive "Surat" (AGENTS.md C3 Humas).
  *
- * TODO(Fase 8 — Drive): buat implementasi nyata (mis. DriveLetterArchiver) yang menyalin surat +
- * lampirannya ke folder sistem "Surat", lalu ganti binding di AppServiceProvider::register().
- * Sampai saat itu dipakai NullLetterArchiver (tidak melakukan apa-apa).
+ * Implementasi: DriveLetterArchiver (Fase 8) — lampiran disalin + dokumen ringkasan surat ke
+ * folder sistem "Surat/{tahun}". Binding di AppServiceProvider::register().
  */
 interface LetterArchiver
 {

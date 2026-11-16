@@ -44,6 +44,18 @@ return [
             'AutoFormat.AutoParagraph' => false,
             'AutoFormat.RemoveEmpty' => true,
         ],
+        // Profil dokumen Drive (editor + template + arsip surat). Boleh perataan teks (style text-align saja),
+        // tabel, dan heading; tanpa gambar/iframe/script; link hanya http(s)/mailto.
+        'document' => [
+            'HTML.Doctype' => 'HTML 4.01 Transitional',
+            'HTML.Allowed' => 'p[style],br,b,strong,i,em,u,s,sub,sup,blockquote,code,pre,hr,'
+                .'h1[style],h2[style],h3[style],h4[style],ul,ol,li[style],a[href|title],'
+                .'table,thead,tbody,tr,th[colspan|rowspan|style],td[colspan|rowspan|style]',
+            'CSS.AllowedProperties' => 'text-align',
+            'URI.AllowedSchemes' => ['http' => true, 'https' => true, 'mailto' => true],
+            'AutoFormat.AutoParagraph' => false,
+            'AutoFormat.RemoveEmpty' => false,
+        ],
         'test' => [
             'Attr.EnableID' => 'true',
         ],

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Filament\Pages\Calendar;
 use App\Filament\Pages\ChangePassword;
+use App\Filament\Pages\DocumentEditor;
+use App\Filament\Pages\Drive;
 use App\Filament\Pages\Inbox;
 use App\Filament\Pages\KasWeekly;
 use App\Filament\Pages\ManageSettings;
@@ -15,6 +17,7 @@ use App\Filament\Resources\ApplicantAccounts\ApplicantAccountResource;
 use App\Filament\Resources\Aspirations\AspirationResource;
 use App\Filament\Resources\Discussions\DiscussionResource;
 use App\Filament\Resources\Divisions\DivisionResource;
+use App\Filament\Resources\DocumentTemplates\DocumentTemplateResource;
 use App\Filament\Resources\Downloads\DownloadResource;
 use App\Filament\Resources\Dues\DueResource;
 use App\Filament\Resources\Galleries\GalleryResource;
@@ -35,6 +38,9 @@ use App\Filament\Widgets\AspirationStatusChart;
 use App\Filament\Widgets\AspirationWeeklyChart;
 use App\Filament\Widgets\ContentQueueWidget;
 use App\Filament\Widgets\DiscussionStatusChart;
+use App\Filament\Widgets\DriveActivityWidget;
+use App\Filament\Widgets\DriveFileTypesChart;
+use App\Filament\Widgets\DriveStorageWidget;
 use App\Filament\Widgets\DuesProgressChart;
 use App\Filament\Widgets\InboxStatsWidget;
 use App\Filament\Widgets\KasArrearsByDivisionChart;
@@ -153,6 +159,8 @@ return [
             // Fase 7B: dijaga RecruitmentPolicy / RecruitmentApplicantPolicy + recruitment.manage / recruitment.interview.
             RecruitmentResource::class,
             RecruitmentApplicantResource::class,
+            // Fase 8: dijaga DocumentTemplatePolicy (folder.manage).
+            DocumentTemplateResource::class,
         ],
     ],
 
@@ -168,6 +176,8 @@ return [
             MyTasks::class,         // semua pengurus kecuali pembina; dibatasi EventAssigneePolicy
             KasWeekly::class,       // kas.view_all / kas.manage
             Inbox::class,           // semua pengurus (hanya pesan miliknya)
+            Drive::class,           // pengurus BEM; isi dibatasi DriveAccessResolver + policy (Fase 8)
+            DocumentEditor::class,  // dokumen Drive; dijaga DocumentPolicy
         ],
     ],
 
@@ -206,6 +216,10 @@ return [
             RecruitmentByDivisionChart::class,
             RecruitmentStatusChart::class,
             RecruitmentDailyChart::class,
+            // Widget Fase 8 (Drive): hak akses diatur canView().
+            DriveStorageWidget::class,
+            DriveFileTypesChart::class,
+            DriveActivityWidget::class,
         ],
     ],
 

@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Panel\ActivityFileController;
 use App\Http\Controllers\Panel\AnnouncementAttachmentController;
+use App\Http\Controllers\Panel\Drive\DocumentExportController;
+use App\Http\Controllers\Panel\Drive\DriveFileController;
+use App\Http\Controllers\Panel\Drive\DriveFolderZipController;
 use App\Http\Controllers\Panel\PostImageController;
 use App\Http\Controllers\Panel\RecruitmentFileController;
 use App\Http\Controllers\Panel\TaskResultController;
@@ -102,6 +105,18 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
             ->whereNumber('applicant')
             ->whereIn('type', ['cv', 'photo'])
             ->name('recruitment.file');
+
+        // Drive (Fase 8): semua lewat policy; tidak berhak → 404.
+        Route::get('/drive/berkas/{file}/unduh', [DriveFileController::class, 'download'])
+            ->whereNumber('file')->middleware('throttle:120,1')->name('drive.files.download');
+        Route::get('/drive/berkas/{file}/pratinjau', [DriveFileController::class, 'preview'])
+            ->whereNumber('file')->middleware('throttle:120,1')->name('drive.files.preview');
+        Route::get('/drive/berkas/{file}/thumbnail', [DriveFileController::class, 'thumbnail'])
+            ->whereNumber('file')->name('drive.files.thumbnail');
+        Route::get('/drive/folder/{folder}/zip', DriveFolderZipController::class)
+            ->whereNumber('folder')->middleware('throttle:10,1')->name('drive.folders.zip');
+        Route::get('/drive/dokumen/{document}/export/{format}', DocumentExportController::class)
+            ->whereNumber('document')->whereIn('format', ['pdf', 'docx'])->middleware('throttle:30,1')->name('drive.documents.export');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

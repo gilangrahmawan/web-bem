@@ -11,7 +11,7 @@ use BackedEnum;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
-/** Surat & masukan (Humas, letter.create). Arsip ke Drive "Surat" menyusul di Fase 8 (LetterArchiver). */
+/** Surat & masukan (Humas, letter.create). Surat ber-lampiran otomatis diarsipkan ke Drive "Surat" (DriveLetterArchiver). */
 class LetterResource extends AnnouncementResourceBase
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;

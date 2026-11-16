@@ -7,9 +7,10 @@ use App\Listeners\LogRolePermissionChanges;
 use App\Models\Setting;
 use App\Models\User;
 use App\Policies\Contracts\EnforcedForSuperAdmin;
+use App\Services\Drive\DriveAccessResolver;
 use App\Services\KasService;
+use App\Services\Letters\DriveLetterArchiver;
 use App\Services\Letters\LetterArchiver;
-use App\Services\Letters\NullLetterArchiver;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Failed;
@@ -35,8 +36,11 @@ class AppServiceProvider extends ServiceProvider
         // Satu instance per request: ringkasan kas di-memo dan dipakai bersama oleh beberapa widget.
         $this->app->scoped(KasService::class);
 
-        // Arsip surat ke Drive: implementasi nyata menyusul di Fase 8.
-        $this->app->bind(LetterArchiver::class, NullLetterArchiver::class);
+        // Arsip surat Humas ber-lampiran ke folder sistem Drive "Surat" (Fase 8).
+        $this->app->bind(LetterArchiver::class, DriveLetterArchiver::class);
+
+        // Akses Drive dihitung sekali per request (pohon folder + izin di-memo).
+        $this->app->scoped(DriveAccessResolver::class);
     }
 
     public function boot(): void

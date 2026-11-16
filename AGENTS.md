@@ -430,12 +430,14 @@ Semua tabel: `id`, `timestamps`. (SD) = soft delete.
 | tabel spatie | roles, permissions, model_has_roles, model_has_permissions, role_has_permissions |
 | `events` | title, description, category, visibility, division_id, starts_at, ends_at, all_day, location, organizer, registration_url, has_conflict, created_by |
 | `event_assignees` | event_id, user_id, status, result_path, submitted_at, reminded_h2_at, reminded_h1_at |
-| `folders` (SD) | name, parent_id, is_system, created_by |
-| `files` (SD) | folder_id, original_name, stored_name, disk, mime_type, size, uploaded_by |
-| `folder_permissions` | folder_id, grantee_type (role/division/user), grantee_id, access (view/upload/manage) |
-| `documents` (SD) | folder_id, title, content (longtext), locked_by, locked_at, created_by, updated_by |
+| `folders` (SD) | name, parent_id, is_system, system_key (mis. `letters`, `letters:2026`), created_by, deleted_by, trash_batch |
+| `files` (SD) | folder_id, original_name, stored_name (UUID), disk, mime_type, extension, kind, size, thumbnail_path, uploaded_by, deleted_by, trash_batch |
+| `folder_permissions` | folder_id, grantee_type (role/division/user), grantee_id, access (view/upload/manage), granted_by |
+| `documents` (SD) | folder_id, title, content (longtext), has_letterhead, locked_by, locked_at, created_by, updated_by, deleted_by, trash_batch |
 | `document_versions` | document_id, content, saved_by |
-| `document_templates` | name, content, created_by |
+| `document_templates` | name, content, has_letterhead, created_by |
+| `drive_stars` | user_id, item_type (folder/file/document), item_id — bintang per user |
+| `drive_activities` | user_id, action, item_type, item_id, item_name, folder_id, created_at — "Terbaru" & widget aktivitas |
 | `announcements` | type (announcement/letter), title, body, attachment_path, target_all, created_by |
 | `announcement_targets` | announcement_id, target_type (role/division/user), target_id |
 | `announcement_recipients` | announcement_id, user_id, read_at, followed_up_at, reply |
@@ -568,6 +570,7 @@ Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib logi
    - Scheduler hapus permanen trash > 30 hari. Folder sistem "Surat" + sambungkan hook Fase 5.
 3. **Dokumen**: `documents`, `document_versions`, `document_templates`; editor tersanitasi; auto-save ±10 detik (versi maks 1/menit/user); kunci dokumen 15 menit; riwayat versi & pulihkan; template kop BEM; export PDF & DOCX; tampil sebagai item di Drive.
 4. Test: tak bisa unduh berkas tanpa izin walau menebak ID; folder tak bisa dipindah ke dirinya; dokumen terkunci tak bisa disimpan user lain.
+5. **Selesai** (keputusan pemilik): satu drive organisasi — "Drive Saya" = root untuk Super Admin, Sekretaris (`folder.manage`), dan Pembina (lihat saja); pengurus lain = item buatannya + "Dibagikan kepada saya". Berbagi di tingkat folder (view/upload/manage, diwariskan); upload hanya mengubah/membuang miliknya; pengaju tidak pernah punya akses. Kuota global `drive_quota_mb` (2048) termasuk Sampah, maks. 10 MB per berkas, upload multi-file dikirim satu per satu (aman untuk batas php.ini). Jenis: PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, JPG/PNG/WebP, TXT/CSV, ZIP (mimes + MIME hasil deteksi isi); berkas disimpan ASLI, hanya thumbnail WebP; thumbnail PDF lewat Imagick+Ghostscript bila tersedia, selain itu ikon. Sampah bertingkat (`trash_batch`), pulihkan: pemilik/pembuang/kelola folder asal/pengelola Drive; hapus permanen: kelola/pengelola Drive; `drive:purge-trash` harian (`drive_trash_days` = 30). Folder sistem "Surat" (+ subfolder tahun) dibuat lazy oleh `SystemFolders`, terkunci juga bagi Super Admin, izin default: divisi Humas view, Koordinator Humas upload. `DriveLetterArchiver`: surat Humas berlampiran → lampiran disalin + dokumen ringkasan (isi & daftar penerima); gagal arsip tidak menggagalkan surat (log + notifikasi Sekretaris). Template dokumen dikelola `folder.manage`; export PDF (dompdf) & DOCX (PHPWord) dengan kop dari settings. Widget: penyimpanan (pengelola & Pembina), berkas per jenis & aktivitas Drive (hanya item terlihat).
 
 ## Fase 9 — PWA, Push, Chat
 
