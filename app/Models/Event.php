@@ -120,6 +120,13 @@ class Event extends Model
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
+        // Pengaju kegiatan (bukan pengurus BEM) hanya melihat kalender publik.
+        if ($user->isApplicant()) {
+            $query->where('visibility', EventVisibility::Public->value);
+
+            return;
+        }
+
         if (EventPolicy::seesAllEvents($user)) {
             return;
         }

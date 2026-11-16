@@ -71,7 +71,7 @@ it('widget ringkasan kas hanya untuk kas.view_all; Kas Saya untuk pengurus wajib
             expect($widget::canView())->toBe($viewsAll, "{$role->value} → {$widget}");
         }
 
-        expect(MyKasWidget::canView())->toBe($role !== RoleName::Pembina, "{$role->value} → Kas Saya");
+        expect(MyKasWidget::canView())->toBe(! in_array($role, [RoleName::Pembina, RoleName::PengajuKegiatan], true), "{$role->value} → Kas Saya");
     }
 });
 

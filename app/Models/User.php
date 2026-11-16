@@ -31,6 +31,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'phone',
         'password',
         'division_id',
+        'organization_id',
         'position',
         'kas_starts_on',
         'photo',
@@ -73,6 +74,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->belongsTo(Division::class);
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /** Akun organisasi pengaju kegiatan — BUKAN pengurus BEM (keputusan Fase 7). */
+    public function isApplicant(): bool
+    {
+        return $this->hasRole(RoleName::PengajuKegiatan->value);
+    }
+
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);
@@ -96,9 +108,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $panel->getId() === 'admin'
-            && $this->is_active
-            && $this->roles()->exists();
+        if ($panel->getId() !== 'admin' || ! $this->is_active || ! $this->roles()->exists()) {
+            return false;
+        }
+
+        // Pengaju kegiatan wajib terhubung ke organisasi yang aktif.
+        return ! $this->isApplicant()
+            || ($this->organization_id !== null && (bool) $this->organization?->is_active);
     }
 
     public function getFilamentAvatarUrl(): ?string

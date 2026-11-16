@@ -2,6 +2,7 @@
 
 use App\Enums\RoleName;
 use App\Models\Division;
+use App\Models\Organization;
 use App\Models\Period;
 use App\Models\Setting;
 use App\Models\User;
@@ -69,6 +70,11 @@ function divisionId(string $slug): int
 function member(RoleName $role, array $attributes = []): User
 {
     $slug = $role->divisionSlug();
+
+    // Pengaju kegiatan wajib terhubung ke organisasi aktif (tanpa itu tidak bisa masuk panel).
+    if ($role === RoleName::PengajuKegiatan && ! array_key_exists('organization_id', $attributes)) {
+        $attributes['organization_id'] = Organization::factory()->create()->id;
+    }
 
     return userWithRole($role, [...($slug ? ['division_id' => divisionId($slug)] : []), ...$attributes]);
 }

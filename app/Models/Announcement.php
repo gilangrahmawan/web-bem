@@ -26,6 +26,7 @@ class Announcement extends Model
         'attachment_path',
         'attachment_name',
         'target_all',
+        'target_all_organizations',
         'created_by',
     ];
 
@@ -34,6 +35,7 @@ class Announcement extends Model
         return [
             'type' => AnnouncementType::class,
             'target_all' => 'boolean',
+            'target_all_organizations' => 'boolean',
         ];
     }
 

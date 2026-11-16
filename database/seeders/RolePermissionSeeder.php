@@ -51,44 +51,45 @@ class RolePermissionSeeder extends Seeder
         return [
             RoleName::Sekretaris->value => [
                 'announcement.create', 'folder.manage', 'download.manage', 'aspiration.view',
+                'activity.submit', 'applicant.manage',
                 'submission.verify', 'recruitment.manage',
                 'event.create_public', 'event.create_ukm', 'event.create_meeting',
                 'chat.use',
                 ...self::MANAGE_DOWNLOADS,
             ],
             RoleName::Bendahara->value => [
-                'kas.manage', 'kas.view_all', 'due.manage', 'submission.review_budget',
+                'kas.manage', 'kas.view_all', 'due.manage', 'submission.review_budget', 'activity.submit',
                 'chat.use',
             ],
             RoleName::KoordinatorKajian->value => [
                 'discussion.create', 'discussion.set_docs_link', 'discussion.manage_all', 'post.create_study',
-                'aspiration.study', 'event.create_meeting',
+                'aspiration.study', 'event.create_meeting', 'activity.submit',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
             ],
             RoleName::AnggotaKajian->value => [
-                'discussion.create', 'aspiration.view', 'post.create_study',
+                'discussion.create', 'aspiration.view', 'post.create_study', 'activity.submit',
                 'chat.use',
             ],
             RoleName::KoordinatorMedpub->value => [
                 'post.create', 'post.create_press_release', 'post.approve_coordinator', 'post.publish',
-                'event.assign_task', 'event.create_meeting',
+                'event.assign_task', 'event.create_meeting', 'activity.submit',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
                 ...self::MANAGE_GALLERIES,
             ],
             RoleName::AnggotaMedpub->value => [
-                'post.create',
+                'post.create', 'activity.submit',
                 'chat.use',
             ],
             RoleName::KoordinatorHumas->value => [
                 'post.create_press_release', 'aspiration.handle', 'aspiration.escalate',
-                'letter.create', 'event.create_ukm', 'event.create_meeting',
+                'letter.create', 'event.create_ukm', 'event.create_meeting', 'activity.submit',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
             ],
             RoleName::AnggotaHumas->value => [
-                'post.create_press_release', 'aspiration.handle', 'letter.create',
+                'post.create_press_release', 'aspiration.handle', 'letter.create', 'activity.submit',
                 'chat.use',
             ],
             // Read-only: hanya lihat. Tidak ada chat. Tidak melihat User, Role, Log, Pengaturan, Struktur.
@@ -99,6 +100,10 @@ class RolePermissionSeeder extends Seeder
                 'view_any_gallery', 'view_gallery',
                 'view_any_program', 'view_program',
                 'kas.view_all', 'report.view', 'aspiration.view',
+            ],
+            // Bukan pengurus BEM: hanya mengajukan kegiatan organisasinya (Fase 7).
+            RoleName::PengajuKegiatan->value => [
+                'activity.submit',
             ],
         ];
     }

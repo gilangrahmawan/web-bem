@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Enums\RoleName;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
@@ -47,7 +48,9 @@ class UserResource extends Resource
     /** @return Builder<User> */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['division', 'roles']);
+        // Akun pengaju kegiatan dikelola di resource Akun Pengaju (Fase 7), bukan di sini.
+        return parent::getEloquentQuery()->with(['division', 'roles'])
+            ->withoutRole(RoleName::PengajuKegiatan->value);
     }
 
     public static function getPages(): array

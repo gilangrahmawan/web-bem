@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AnnouncementType;
+use App\Enums\RoleName;
 use App\Models\Announcement;
 use App\Models\AnnouncementRecipient;
 use App\Models\AnnouncementTarget;
@@ -20,8 +21,10 @@ use Spatie\Permission\Models\Role;
 
 /**
  * Kirim pengumuman/surat & aksi penerima (AGENTS.md Fase 5).
- * Target (semua / role / divisi / user) diubah menjadi daftar pengurus AKTIF yang punya role
- * (termasuk Pembina bila tercakup); user nonaktif & pengirim sendiri tidak menerima.
+ * Target pengurus (semua / role / divisi / user) → pengurus AKTIF (termasuk Pembina bila tercakup).
+ * Pengaju kegiatan TIDAK PERNAH masuk target pengurus. Target organisasi terpisah (semua organisasi /
+ * organisasi tertentu) → akun pengaju aktif di organisasi aktif tersebut (keputusan Fase 7).
+ * User nonaktif & pengirim sendiri tidak menerima.
  */
 class AnnouncementService
 {
@@ -54,17 +57,20 @@ class AnnouncementService
         $divisions = $targetAll ? [] : array_map('intval', array_filter((array) ($data['divisions'] ?? []), 'filled'));
         $users = $targetAll ? [] : array_map('intval', array_filter((array) ($data['users'] ?? []), 'filled'));
 
-        if (! $targetAll && $roles === [] && $divisions === [] && $users === []) {
+        $allOrganizations = (bool) ($data['target_all_organizations'] ?? false);
+        $organizations = $allOrganizations ? [] : array_map('intval', array_filter((array) ($data['organizations'] ?? []), 'filled'));
+
+        if (! $targetAll && $roles === [] && $divisions === [] && $users === [] && ! $allOrganizations && $organizations === []) {
             throw ValidationException::withMessages(['target_all' => 'Pilih minimal satu target penerima.']);
         }
 
-        $recipients = $this->resolveRecipients($actor, $targetAll, $roles, $divisions, $users);
+        $recipients = $this->resolveRecipients($actor, $targetAll, $roles, $divisions, $users, $allOrganizations, $organizations);
 
         if ($recipients->isEmpty()) {
             throw ValidationException::withMessages(['target_all' => 'Target yang dipilih tidak memiliki penerima aktif.']);
         }
 
-        $announcement = DB::transaction(function () use ($actor, $type, $title, $body, $targetAll, $roles, $divisions, $users, $recipients, $data): Announcement {
+        $announcement = DB::transaction(function () use ($actor, $type, $title, $body, $targetAll, $roles, $divisions, $users, $allOrganizations, $organizations, $recipients, $data): Announcement {
             $announcement = Announcement::query()->create([
                 'type' => $type,
                 'title' => $title,
@@ -72,6 +78,7 @@ class AnnouncementService
                 'attachment_path' => $data['attachment_path'] ?? null,
                 'attachment_name' => $data['attachment_name'] ?? null,
                 'target_all' => $targetAll,
+                'target_all_organizations' => $allOrganizations,
                 'created_by' => $actor->getKey(),
             ]);
 
@@ -80,6 +87,7 @@ class AnnouncementService
                 ...array_map(fn ($id) => ['target_type' => AnnouncementTarget::ROLE, 'target_id' => $id], $roleIds),
                 ...array_map(fn ($id) => ['target_type' => AnnouncementTarget::DIVISION, 'target_id' => $id], $divisions),
                 ...array_map(fn ($id) => ['target_type' => AnnouncementTarget::USER, 'target_id' => $id], $users),
+                ...array_map(fn ($id) => ['target_type' => AnnouncementTarget::ORGANIZATION, 'target_id' => $id], $organizations),
             ];
 
             foreach ($targets as $target) {
@@ -157,13 +165,36 @@ class AnnouncementService
      * @param  list<string>  $roles
      * @param  list<int>  $divisions
      * @param  list<int>  $users
+     * @param  list<int>  $organizations
      * @return Collection<int, User>
      */
-    public function resolveRecipients(User $actor, bool $targetAll, array $roles, array $divisions, array $users): Collection
-    {
-        return User::query()
+    public function resolveRecipients(
+        User $actor,
+        bool $targetAll,
+        array $roles,
+        array $divisions,
+        array $users,
+        bool $allOrganizations = false,
+        array $organizations = [],
+    ): Collection {
+        $hasStaffTarget = $targetAll || $roles !== [] || $divisions !== [] || $users !== [];
+
+        $applicants = ! $allOrganizations && $organizations === [] ? new Collection : User::query()
+            ->active()
+            ->role(RoleName::PengajuKegiatan->value)
+            ->whereKeyNot($actor->getKey())
+            ->whereHas('organization', fn (Builder $o) => $o->where('is_active', true)
+                ->when(! $allOrganizations, fn (Builder $o) => $o->whereIn('organizations.id', $organizations)))
+            ->get();
+
+        if (! $hasStaffTarget) {
+            return $applicants;
+        }
+
+        $staff = User::query()
             ->active()
             ->whereHas('roles')
+            ->withoutRole(RoleName::PengajuKegiatan->value)
             ->whereKeyNot($actor->getKey())
             ->when(! $targetAll, fn (Builder $q) => $q->where(function (Builder $q) use ($roles, $divisions, $users): void {
                 $q->whereRaw('1 = 0')
@@ -172,6 +203,8 @@ class AnnouncementService
                     ->when($users !== [], fn (Builder $q) => $q->orWhereIn('users.id', $users));
             }))
             ->get();
+
+        return $staff->concat($applicants)->unique(fn (User $u) => $u->getKey())->values();
     }
 
     private function ensureOwner(User $user, AnnouncementRecipient $recipient): void

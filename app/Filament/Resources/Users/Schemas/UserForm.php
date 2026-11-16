@@ -74,8 +74,9 @@ class UserForm
         return Role::query()
             ->orderBy('id')
             ->pluck('name')
-            ->reject(fn (string $name): bool => $name === RoleName::SuperAdmin->value
+            ->reject(fn (string $name): bool => ($name === RoleName::SuperAdmin->value
                 && ! ($actor instanceof User && $actor->isSuperAdmin()))
+                || $name === RoleName::PengajuKegiatan->value) // dikelola di Akun Pengaju
             ->mapWithKeys(fn (string $name): array => [$name => RoleName::labelFor($name)])
             ->all();
     }

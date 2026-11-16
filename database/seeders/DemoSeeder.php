@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Enums\OrganizationType;
 use App\Enums\RoleName;
 use App\Models\Division;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -31,7 +33,7 @@ class DemoSeeder extends Seeder
 
         $divisions = Division::query()->pluck('id', 'slug');
 
-        foreach (RoleName::cases() as $role) {
+        foreach (RoleName::staffCases() as $role) {
             $email = str_replace('_', '.', $role->value).'@demo.test';
 
             $user = User::query()->firstOrNew(['email' => $email]);
@@ -50,7 +52,24 @@ class DemoSeeder extends Seeder
             $user->syncRoles([$role->value]);
         }
 
-        $this->command?->info('Akun demo dibuat: {role}@demo.test (password = DEMO_PASSWORD).');
+        // Pengaju kegiatan contoh (bukan pengurus BEM): organisasi "UKM Futsal".
+        $futsal = Organization::query()->firstOrCreate(['name' => 'UKM Futsal'], ['type' => OrganizationType::Ukm, 'is_active' => true]);
+        $applicant = User::query()->firstOrNew(['email' => 'pengaju.futsal@demo.test']);
+        $applicant->fill([
+            'name' => 'Demo Pengaju UKM Futsal',
+            'position' => 'Pengaju kegiatan · UKM Futsal',
+            'division_id' => null,
+            'organization_id' => $futsal->id,
+        ]);
+        $applicant->forceFill([
+            'password' => $password,
+            'is_active' => true,
+            'must_change_password' => false,
+            'email_verified_at' => now(),
+        ])->save();
+        $applicant->syncRoles([RoleName::PengajuKegiatan->value]);
+
+        $this->command?->info('Akun demo dibuat: {role}@demo.test + pengaju.futsal@demo.test (password = DEMO_PASSWORD).');
 
         $this->call([DemoContentSeeder::class, DemoEventSeeder::class, DemoKasSeeder::class]);
     }

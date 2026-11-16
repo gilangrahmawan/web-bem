@@ -102,7 +102,7 @@ Lanjutkan fase demi fase. **Satu fase per sesi**, coba hasilnya sendiri sebelum 
 |---|---|---|
 | Sebelum Fase 2 | Identitas BEM | Logo (PNG/SVG), kode warna utama & sekunder, nama kabinet, visi-misi, sambutan Ketua |
 | Sebelum Fase 5 | Cloudflare Turnstile (gratis) | Site key & secret key (CAPTCHA form publik) |
-| Sebelum Fase 7 | Keputusan | Proposal/LPJ diajukan pihak luar BEM, divisi internal, atau keduanya |
+| Sebelum Fase 7 | Data | Daftar organisasi (UKM, HMJ, panitia) & akun pengaju kegiatan pertama (dibuat Sekretaris) |
 | Sebelum Fase 9 | Pusher Channels (paket Sandbox gratis) | app_id, key, secret, cluster (pilih `ap1` Singapura) |
 | Sebelum Fase 10 | Hosting + domain | Shared hosting dengan PHP 8.2+, MySQL, SSH, cron; atau subdomain kampus |
 | Sebelum Fase 10 | GitHub | Repository **private** untuk kode |
@@ -193,9 +193,9 @@ tests/Feature
 - Nama file disimpan sebagai UUID, nama asli di kolom `original_name`.
 - Berkas privat (proposal, LPJ, drive, lampiran surat, CV, chat) di disk privat dan diunduh lewat controller berotorisasi. Hanya unduhan publik & gambar konten di disk `public`.
 
-**Form publik** (aspirasi, pengajuan, oprec, cek status)
+**Form publik** (aspirasi, oprec, cek status). Proposal/LPJ **tidak** lewat form publik — pengaju wajib login (keputusan Fase 7).
 - Cloudflare Turnstile + rate limit (kirim 5/IP/jam, cek status 20/IP/jam).
-- Kode tracking acak tak berurutan, contoh `ASP-8K2X-QM7D`, `PRP-…`, `LPJ-…`, `REG-…` (tanpa karakter ambigu 0, O, 1, I).
+- Kode tracking acak tak berurutan, contoh `ASP-8K2X-QM7D`, `REG-…` (tanpa karakter ambigu 0, O, 1, I).
 - Aspirasi anonim tidak menyimpan IP/identitas.
 
 **Celah web**
@@ -236,7 +236,11 @@ Keputusan final:
 - **Drive internal mirip Google Drive** (rincian di Fase 8): sidebar "+ Baru", Drive Saya, Dibagikan kepada saya, Terbaru, Berbintang, Sampah, bar pemakaian penyimpanan; kartu dengan thumbnail; grid/daftar; menu titik tiga; drag & drop; bintang per user. Berkas Unduhan publik (Fase 2) tetap terpisah dari Drive.
 - **Semua role punya dashboard dengan grafik** (Filament `ChartWidget` / `StatsOverviewWidget`). Mulai Fase 4, setiap fase wajib menambah widget grafik untuk modulnya. Data grafik mengikuti hak akses (anggota hanya datanya sendiri, koordinator hanya divisinya); tampilan kosong rapi bila belum ada data; warna mengikuti warna brand. Fase 10 memeriksa ulang setiap role punya minimal satu grafik.
 
-Asumsi (tanyakan di awal Fase 7): proposal/LPJ diajukan **pihak luar BEM** (UKM, HMJ, panitia) lewat form publik tanpa login.
+- **Kegiatan sebagai pusat** (keputusan Fase 7): entitas utama adalah *Kegiatan*; proposal & LPJ adalah dua tahap di dalam satu kegiatan. Alur: buat kegiatan + ajukan proposal → review → disetujui → kegiatan berlangsung → unggah LPJ → review LPJ → selesai/arsip. Rantai review proposal & LPJ sama: **Sekretaris** (kelengkapan) → **Bendahara** (anggaran/laporan keuangan) → **Ketua/Wakil** (keputusan). Penyetuju ≠ pengaju; catatan wajib saat revisi/tolak.
+- **Pengaju wajib login**: tidak ada form proposal/LPJ publik. Akun per orang dengan role **`pengaju_kegiatan`**, terhubung ke satu **organisasi** (UKM, HMJ, BEM, Panitia, Lainnya). Akun dibuat Super Admin atau Sekretaris (Sekretaris hanya boleh mengelola akun `pengaju_kegiatan`). Pengurus BEM boleh mengajukan kegiatan internal dengan akunnya sendiri (organisasi BEM).
+- **Pengaju kegiatan bukan pengurus BEM**: tidak wajib kas, tidak masuk target pengumuman "semua pengurus"/per divisi, tidak masuk struktur, tidak masuk grup chat divisi BEM, tidak melihat kalender internal, aspirasi, kas, drive, konten, atau data internal lain. Yang bisa diakses: Kegiatan Saya, Profil Saya, Kalender publik, Kotak Masuk (hanya pesan yang ditujukan kepadanya), Chat (Fase 9).
+- **Pengumuman/surat ke organisasi**: pengaju tidak pernah masuk target pengurus (semua pengurus, per role, per divisi, user tertentu). Ada jenis target terpisah **"Semua organisasi"** dan **"Organisasi tertentu"** (penerima = akun pengaju aktif di organisasi itu), hanya untuk Surat Humas (`letter.create`) dan Pengumuman Sekretaris (`announcement.create`).
+- **Tenggat LPJ** = 14 hari setelah acara selesai (setting `lpj_deadline_days`). Pengingat H-3, hari tenggat, lalu mingguan selama terlambat; LPJ terlambat ditandai merah. **Belum ada sanksi** (mis. blokir proposal baru) — kode disiapkan agar mudah ditambahkan.
 
 ## C2. Halaman publik
 
@@ -252,8 +256,7 @@ Asumsi (tanyakan di awal Fase 7): proposal/LPJ diajukan **pihak luar BEM** (UKM,
 | Program kerja | `/proker` | Proker per divisi: Rencana/Berjalan/Selesai |
 | Galeri | `/galeri`, `/galeri/{album}` | Foto per kegiatan |
 | Unduhan | `/unduhan` | Template Proposal, Template LPJ, Form Peminjaman Barang Kampus, Form Peminjaman Barang BEM, SOP, Surat, Lainnya; filter & cari |
-| Pengajuan | `/pengajuan` | Form proposal/LPJ + upload PDF → kode tracking |
-| Cek status pengajuan | `/pengajuan/status` | Status, riwayat, catatan revisi, upload ulang saat revisi |
+| Pengajuan | `/pengajuan` | Halaman informasi: alur pengajuan kegiatan, link template proposal/LPJ dari Pusat Unduhan, cara meminta akun pengaju (hubungi Sekretaris BEM). Pengajuan dilakukan setelah login. |
 | Aspirasi | `/aspirasi`, `/aspirasi/status` | Form (boleh anonim) → kode tracking; cek status & tanggapan |
 | Oprec | `/oprec`, `/oprec/hasil` | Form pendaftaran saat dibuka; pengumuman hasil |
 | Kontak | `/kontak` | Alamat sekre, email, medsos, peta |
@@ -299,7 +302,11 @@ Asumsi (tanyakan di awal Fase 7): proposal/LPJ diajukan **pihak luar BEM** (UKM,
 - Input agenda UKM (Koordinator); draft press release (masuk alur konten Medpub).
 
 **Pembina**
-- Read-only: dashboard ringkasan, kalender, kas, proker, pengajuan, aspirasi, laporan.
+- Read-only: dashboard ringkasan, kalender, kas, proker, kegiatan (proposal/LPJ), aspirasi, laporan.
+
+**Pengaju kegiatan (`pengaju_kegiatan`, bukan pengurus BEM)**
+- Kegiatan Saya (semua kegiatan organisasinya): buat kegiatan + ajukan proposal, unggah LPJ setelah proposal disetujui, lihat riwayat & catatan revisi, ajukan pindah penanggung jawab.
+- Profil Saya, Kalender publik, Kotak Masuk (pesan untuknya saja), Chat (Fase 9). Tidak ada akses ke modul internal BEM.
 
 ## C4. Kalender (internal & eksternal)
 
@@ -322,7 +329,7 @@ Satu tabel `events`, dua tampilan.
 ## C5. Notifikasi
 
 - Channel: `database` (lonceng) + `webpush`.
-- Pemicu: tugas ditugaskan / H-2 / H-1; kas dibayar (terima kasih); tunggakan; pengumuman; surat; konten menunggu persetujuan / revisi / terbit; aspirasi baru / dieskalasi / diteruskan / hasil kajian; rapat besok; pesan chat; status pengajuan berubah (reviewer internal).
+- Pemicu: tugas ditugaskan / H-2 / H-1; kas dibayar (terima kasih); tunggakan; pengumuman; surat; konten menunggu persetujuan / revisi / terbit; aspirasi baru / dieskalasi / diteruskan / hasil kajian; rapat besok; pesan chat; status kegiatan berubah (reviewer & penanggung jawab); pengingat tenggat LPJ (H-3, hari tenggat, mingguan saat terlambat); pindah penanggung jawab.
 - PWA: `manifest.json`, service worker, tombol "Aktifkan notifikasi", `push_subscriptions` per perangkat, panduan iPhone (Add to Home Screen), preferensi notifikasi per user.
 
 ## C6. Chat
@@ -331,12 +338,13 @@ Satu tabel `events`, dua tampilan.
 - Teks, gambar, file; reply; tanda terbaca; jumlah belum dibaca; mute; cari; hapus pesan sendiri.
 - Pusher private channel `conversation.{id}`; fallback polling 5 detik.
 - Super Admin bisa membuat/membubarkan grup apa pun, **tidak bisa membaca chat personal**. Pembina tidak punya akses chat.
+- **Pengaju kegiatan** (keputusan Fase 7, dikerjakan Fase 9): tetap bisa memakai chat; chat personal dengan semua akun terdaftar (pengurus BEM & pengaju lain); **tidak** masuk grup divisi BEM otomatis (Kajian, Medpub, Humas, BPH, Semua Pengurus); masuk **grup organisasi** otomatis (mis. "UKM Futsal") berisi semua akun aktif organisasi itu — anggota disinkronkan saat akun dibuat, dipindah organisasi, atau dinonaktifkan; boleh membuat grup sendiri dengan anggota akun aktif terdaftar saja (tanpa undangan luar). Pembina tetap tidak ikut chat.
 
 ## C7. Alur status
 
 - **Konten** (`PostStatus`): `draft` → `pending_coordinator` → `pending_leader` → `approved` → `published`; dari pending bisa `revision` (kembali ke pembuat) atau `rejected`.
 - **Aspirasi** (`AspirationStatus`): `new` → `in_review` → `resolved`, atau `in_review` → `escalated` (Super Admin) → `in_study` (Kajian) → `returned` (Humas) → `resolved`. Bisa `rejected` dengan alasan.
-- **Pengajuan** (`SubmissionStatus`): `submitted` → `verified` (Sekretaris) → `budget_reviewed` (Bendahara) → `approved` / `revision` / `rejected` (Super Admin). Revisi → upload ulang → `submitted`. LPJ wajib menautkan proposal `approved`.
+- **Kegiatan** (`ActivityStatus`): `draft` → `proposal_submitted` → `proposal_verified` (Sekretaris) → `proposal_budget_reviewed` (Bendahara) → `approved` (Ketua/Wakil; kegiatan masuk kalender publik) → `lpj_submitted` → `lpj_verified` → `lpj_budget_reviewed` → `completed`. Revisi di tiap tahap (`proposal_revision` / `lpj_revision`) → unggah ulang → mulai lagi dari Sekretaris. Proposal bisa `rejected`; kegiatan bisa `cancelled` (agenda kalender ikut dihapus). "Unggah LPJ" hanya untuk kegiatan `approved`.
 - **Tugas konten** (`TaskStatus`): `todo` → `in_progress` → `submitted` → `done` (bisa kembali ke `in_progress`).
 - **Pembahasan** (`DiscussionStatus`): `draft` → `discussed` → `done`.
 - **Pendaftar oprec** (`ApplicantStatus`): `registered` → `document_passed` → `interview` → `accepted` / `rejected`.
@@ -361,6 +369,7 @@ User → Role → Permission (`spatie/laravel-permission`). Permission didefinis
 | `koordinator_humas` | Koordinator Humas | Humas |
 | `anggota_humas` | Anggota Humas | Humas |
 | `pembina` | Pembina | — |
+| `pengaju_kegiatan` | Pengaju Kegiatan (bukan pengurus BEM; wajib terhubung ke organisasi) | — |
 
 - `super_admin` melewati semua cek via `Gate::before` — **kecuali** membaca chat personal orang lain (selalu ditolak).
 - `pembina` hanya permission `view`/`view_any`; tidak ada create/update/delete; tidak ada chat.
@@ -368,6 +377,8 @@ User → Role → Permission (`spatie/laravel-permission`). Permission didefinis
 ## D2. Permission kustom (format `modul.aksi`)
 
 `user.manage`, `role.manage`, `setting.manage`, `event.create_ukm`, `event.create_public`, `event.create_meeting`, `event.assign_task`, `event.manage_all`, `kas.manage`, `kas.view_all`, `due.manage`, `discussion.create`, `discussion.set_docs_link`, `discussion.manage_all`, `post.create`, `post.create_press_release`, `post.approve_coordinator`, `post.approve_leader`, `post.publish`, `aspiration.handle`, `aspiration.escalate`, `aspiration.forward_to_kajian`, `aspiration.study`, `announcement.create`, `letter.create`, `folder.manage`, `download.manage`, `submission.verify`, `submission.review_budget`, `submission.decide`, `recruitment.manage`, `chat.use`, `report.view`.
+
+Ditambahkan kemudian (lewat migration data yang hanya menambah): `aspiration.view` (Fase 5), `post.create_study` (Fase 6), `activity.submit` (ajukan kegiatan — pengurus BEM kecuali pembina, dan `pengaju_kegiatan`), `applicant.manage` (kelola akun pengaju & organisasi — super_admin, sekretaris). Review kegiatan memakai `submission.verify` / `submission.review_budget` / `submission.decide`.
 
 Resource Filament memakai permission bawaan Shield (`view_any_x`, `create_x`, …) yang dipetakan sesuai matriks.
 
@@ -386,7 +397,7 @@ K = kelola penuh · T = tambah/draft · S = setujui · L = lihat · L-own = hany
 | Kalender internal | K | T | L | T (divisi) | L | T (divisi + tugas) | L | T (divisi + UKM) | L | L |
 | Aspirasi | K | L | — | K (kajian) | L | — | — | K | T | L |
 | Surat Humas | K | L | L | L | L | L | L | K | T | L |
-| Proposal/LPJ | S | K (verifikasi) | T (review anggaran) | — | — | — | — | — | — | L |
+| Kegiatan (proposal/LPJ) | S | K (verifikasi) | T (review anggaran) | T (internal) | T (internal) | T (internal) | T (internal) | T (internal) | T (internal) | L |
 | Berkas unduhan | K | K | — | — | — | — | — | — | — | L |
 | Oprec | K | K | — | — | — | — | — | — | — | L |
 | Chat | ya | ya | ya | ya | ya | ya | ya | ya | ya | — |
@@ -437,8 +448,11 @@ Semua tabel: `id`, `timestamps`. (SD) = soft delete.
 | `post_approvals` | post_id, user_id, stage (coordinator/leader), decision, note |
 | `aspirations` | tracking_code (unique), name, contact, is_anonymous, category, body, status, response, handled_by |
 | `aspiration_logs` | aspiration_id, from_status, to_status, note, user_id |
-| `submissions` | type (proposal/lpj), tracking_code (unique), organization, activity_name, pic_name, pic_contact, activity_date, file_path, parent_id, status |
-| `submission_logs` | submission_id, from_status, to_status, note, user_id |
+| `organizations` | name, type (ukm/hmj/bem/panitia/other), is_active |
+| `users` (tambahan Fase 7) | organization_id (wajib untuk `pengaju_kegiatan`) |
+| `student_activities` | organization_id, name, pic_user_id, created_by, starts_on, ends_on, location, description, budget_estimate, proposal_path, proposal_name, budget_realization, lpj_path, lpj_name, status, review_round, event_id, proposal_approved_at, lpj_submitted_at, completed_at, kolom pengingat LPJ |
+| `student_activity_logs` | student_activity_id, stage (proposal/lpj/pic/system), from_status, to_status, note, user_id |
+| `activity_pic_transfers` | student_activity_id, from_user_id, to_user_id, requested_by, status (pending/approved/rejected), decided_by, decided_at, note |
 | `downloads` | title, category, description, file_path, size, download_count, is_active |
 | `galleries` / `gallery_photos` | album (title, slug, event_date) / foto (gallery_id, path, caption) |
 | `programs` | division_id, period_id, title, description, status |
@@ -530,13 +544,15 @@ Pemilik memanggil dengan kalimat: **"Kerjakan Fase N sesuai AGENTS.md."** Setiap
 4. Dari tugas konten berstatus `submitted`, koordinator bisa membuat draft konten bertaut.
 5. Test: anggota tak bisa publish; tak bisa terbit tanpa dua persetujuan; pembuat tak bisa mengedit saat pending.
 
-## Fase 7 — Proposal/LPJ & Oprec
+## Fase 7 — Kegiatan (Proposal/LPJ) & Oprec
 
-**Tanyakan dulu** siapa pengaju proposal/LPJ (pihak luar / internal / keduanya), sesuaikan rencana.
+Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib login. Boleh dipecah menjadi **7A** (kegiatan, proposal, LPJ, akun pengaju) dan **7B** (oprec).
 
-1. **Pengajuan**: migration/model + log + enum; form publik `/pengajuan` (PDF ≤10 MB; LPJ wajib kode proposal `approved`; Turnstile; rate limit); `/pengajuan/status` + upload ulang saat revisi; `SubmissionWorkflowService` (verify, reviewBudget, decide, resubmit); resource dengan tab per tahap; unduh lewat controller berotorisasi.
-2. **Oprec**: `recruitments`, `recruitment_applicants`; form publik aktif hanya saat dibuka (upload CV/foto); kode `REG-…`; resource (filter divisi, ubah status, jadwal interview, export); halaman hasil; tombol "Jadikan akun pengurus" (membuat user nonaktif).
-3. Test alur pengajuan termasuk revisi & LPJ; form oprec tertutup di luar jadwal.
+1. **7A — Organisasi & akun pengaju**: tabel `organizations`, kolom `users.organization_id`; role `pengaju_kegiatan` + permission `activity.submit`, `applicant.manage` lewat migration data yang hanya menambah; resource Organisasi & Akun Pengaju (Super Admin & Sekretaris; Sekretaris hanya akun `pengaju_kegiatan`, diuji termasuk manipulasi request); akun baru wajib ganti password. Pengecualian pengaju dari modul internal (kas, pengumuman, struktur, kalender internal, aspirasi, drive, konten, dll.) diuji satu per satu. Akun demo `pengaju.futsal@demo.test` (organisasi contoh "UKM Futsal") hanya lokal.
+1b. **7A — Kegiatan**: `student_activities` + log + pindah penanggung jawab; `ActivityWorkflowService` (submitProposal, verify, reviewBudget, decide, submitLpj, cancel, pindah penanggung jawab) dalam transaction + log + notifikasi; penyetuju ≠ pengaju; cek bentrok kalender saat proposal diajukan (peringatan, boleh lanjut); proposal disetujui → agenda kalender publik (ukm untuk organisasi luar, bem untuk BEM) tertaut, dihapus bila dibatalkan/ditolak; berkas PDF ≤10 MB di disk privat lewat controller berotorisasi; tenggat LPJ dari setting `lpj_deadline_days` (14) + command pengingat harian; titik kait sanksi LPJ terlambat (belum aktif). Halaman publik `/pengajuan` = informasi + template.
+2. **7B — Oprec**: `recruitments`, `recruitment_applicants`; form publik aktif hanya saat dibuka (upload CV/foto); kode `REG-…`; resource (filter divisi, ubah status, jadwal interview, export); halaman hasil; tombol "Jadikan akun pengurus" (membuat user nonaktif).
+3. Widget: BEM (Super Admin, Sekretaris, Bendahara, Pembina) — kegiatan per status, antrean review per tahap, LPJ terlambat, kegiatan per organisasi, rata-rata lama proses; Pengaju — kegiatan saya per status, tenggat LPJ terdekat; Oprec — pendaftar per divisi & per status.
+4. Test alur kegiatan termasuk revisi di tiap tahap, LPJ hanya setelah proposal disetujui, pindah penanggung jawab, pengingat tidak dobel, integrasi kalender; form oprec tertutup di luar jadwal.
 
 ## Fase 8 — Drive & Dokumen
 
@@ -555,7 +571,7 @@ Pemilik memanggil dengan kalimat: **"Kerjakan Fase N sesuai AGENTS.md."** Setiap
 
 1. **PWA**: `manifest.json` (ikon, warna, `display: standalone`, `start_url: /panel-bem`), service worker (cache aset + `push` + `notificationclick`).
 2. **Push**: package webpush, kunci VAPID di `.env`, tombol Aktifkan notifikasi, simpan subscription, tambahkan channel `webpush` ke semua notifikasi, halaman preferensi notifikasi, panduan iPhone.
-3. **Chat**: migration/model conversations/members/messages; `ConversationSyncService` (grup divisi otomatis, tanpa pembina); broadcasting Pusher + otorisasi `routes/channels.php`; fallback polling; halaman kustom **Chat** (Livewire) dengan fitur C6; rate limit 30 pesan/menit; push untuk pesan baru kecuali mute.
+3. **Chat**: migration/model conversations/members/messages; `ConversationSyncService` (grup divisi otomatis, tanpa pembina & tanpa `pengaju_kegiatan`; **grup organisasi** otomatis untuk pengaju — lihat C6); broadcasting Pusher + otorisasi `routes/channels.php`; fallback polling; halaman kustom **Chat** (Livewire) dengan fitur C6; rate limit 30 pesan/menit; push untuk pesan baru kecuali mute.
 4. Test: non-anggota tak bisa baca/subscribe; Super Admin tak bisa membuka chat personal orang lain; user nonaktif keluar dari grup divisi.
 
 ## Fase 10 — Penyempurnaan & Deploy

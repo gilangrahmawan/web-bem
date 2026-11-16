@@ -14,6 +14,9 @@ class AnnouncementTarget extends Model
 
     public const USER = 'user';
 
+    /** Organisasi (penerima = akun pengaju aktif di organisasi itu). */
+    public const ORGANIZATION = 'organization';
+
     /** @var list<string> */
     protected $fillable = [
         'announcement_id',

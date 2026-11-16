@@ -202,7 +202,8 @@ class KasService
         return User::query()
             ->active()
             ->whereHas('roles')
-            ->withoutRole(RoleName::Pembina->value)
+            // Pembina & pengaju kegiatan (bukan pengurus BEM) tidak wajib kas.
+            ->withoutRole([RoleName::Pembina->value, RoleName::PengajuKegiatan->value])
             ->when($divisionId, fn (Builder $q, int $id) => $q->where('division_id', $id));
     }
 

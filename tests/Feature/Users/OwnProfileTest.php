@@ -19,7 +19,7 @@ use function Pest\Laravel\get;
 beforeEach(fn () => Storage::fake('public'));
 
 it('semua role, termasuk pembina, bisa membuka Profil Saya', function (RoleName $role): void {
-    actingAs(userWithRole($role))->get('/panel-bem/profil-saya')
+    actingAs(member($role))->get('/panel-bem/profil-saya')
         ->assertOk()
         ->assertSee('Profil Saya')
         ->assertSee('Gunakan foto formal/rapi');

@@ -76,7 +76,8 @@ class MyTasks extends Page implements HasTable
 
         return $user instanceof User
             && $user->is_active
-            && ! $user->hasRole(RoleName::Pembina->value);
+            && ! $user->hasRole(RoleName::Pembina->value)
+            && ! $user->isApplicant();
     }
 
     public static function getNavigationBadge(): ?string

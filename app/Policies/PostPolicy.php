@@ -29,12 +29,12 @@ class PostPolicy implements EnforcedForSuperAdmin
 
     public function viewAny(User $user): bool
     {
-        return $user->is_active;
+        return $user->is_active && ! $user->isApplicant();
     }
 
     public function view(User $user, Post $post): bool
     {
-        return $user->is_active && (
+        return $this->viewAny($user) && (
             self::seesAllDrafts($user)
             || $post->author_id === $user->getKey()
             || ! in_array($post->status, [PostStatus::Draft, PostStatus::Revision], true)

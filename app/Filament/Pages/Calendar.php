@@ -460,7 +460,7 @@ class Calendar extends Page
                 ->multiple()
                 ->searchable()
                 ->preload()
-                ->options(fn () => User::query()->active()->withoutRole(RoleName::Pembina->value)->orderBy('name')->pluck('name', 'id'))
+                ->options(fn () => User::query()->active()->withoutRole([RoleName::Pembina->value, RoleName::PengajuKegiatan->value])->orderBy('name')->pluck('name', 'id'))
                 ->required(fn (Get $get): bool => $categoryOf($get) === EventCategory::Content)
                 ->visible(fn (Get $get): bool => $categoryOf($get) === EventCategory::Content)
                 ->helperText('Mendapat notifikasi saat ditugaskan, serta pengingat H-2 dan H-1.'),

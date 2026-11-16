@@ -200,4 +200,9 @@ it('akses resource Pengumuman & Surat sesuai izin', function (): void {
     }
 
     actingAs(member(RoleName::Pembina))->get('/panel-bem/pengumuman/create')->assertForbidden();
+    // Regresi: halaman Create hanya untuk pemegang izin tipe itu (Humas tidak bisa membuka Create Pengumuman, Sekretaris tidak bisa Create Surat).
+    actingAs(member(RoleName::KoordinatorHumas))->get('/panel-bem/pengumuman/create')->assertForbidden();
+    actingAs(member(RoleName::Sekretaris))->get('/panel-bem/surat/create')->assertForbidden();
+    actingAs(member(RoleName::Sekretaris))->get('/panel-bem/pengumuman/create')->assertOk();
+    actingAs(member(RoleName::AnggotaHumas))->get('/panel-bem/surat/create')->assertOk();
 });

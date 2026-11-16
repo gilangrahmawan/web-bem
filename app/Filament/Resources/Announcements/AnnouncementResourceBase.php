@@ -7,6 +7,7 @@ use App\Enums\RoleName;
 use App\Filament\Resources\Announcements\RelationManagers\RecipientsRelationManager;
 use App\Models\Announcement;
 use App\Models\Division;
+use App\Models\Organization;
 use App\Models\User;
 use App\Support\Format;
 use Filament\Facades\Filament;
@@ -22,12 +23,14 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Spatie\Permission\Models\Role;
+use UnitEnum;
 
 /**
  * Basis resource Pengumuman (Sekretaris) & Surat (Humas). Dikirim langsung saat disimpan lewat
@@ -56,6 +59,23 @@ abstract class AnnouncementResourceBase extends Resource
     public static function canEdit(Model $record): bool
     {
         return false;
+    }
+
+    /**
+     * Filament 5 mengotorisasi halaman lewat getAuthorizationResponse() (bukan canCreate()):
+     * create → izin tipe resource ini (announcement.create / letter.create), viewAny → canViewAny(),
+     * update → selalu ditolak (tidak bisa diedit setelah terkirim).
+     */
+    public static function getAuthorizationResponse(string|UnitEnum $action, ?Model $record = null): Response
+    {
+        $name = $action instanceof UnitEnum ? $action->name : $action;
+
+        return match ($name) {
+            'create' => static::canCreate() ? Response::allow() : Response::deny(),
+            'viewAny' => static::canViewAny() ? Response::allow() : Response::deny(),
+            'update' => Response::deny(),
+            default => parent::getAuthorizationResponse($action, $record),
+        };
     }
 
     /** @return Builder<Announcement> */
@@ -101,16 +121,29 @@ abstract class AnnouncementResourceBase extends Resource
                 ->columns(3)
                 ->columnSpanFull()
                 ->schema([
-                    Toggle::make('target_all')->label('Semua pengurus (termasuk Pembina)')->default(true)->live()->columnSpanFull(),
+                    Toggle::make('target_all')->label('Semua pengurus BEM (termasuk Pembina)')->default(true)->live()->columnSpanFull(),
                     Select::make('roles')->label('Role')->multiple()
-                        ->options(fn () => Role::query()->orderBy('name')->pluck('name', 'name')->map(fn (string $n) => RoleName::labelFor($n)))
+                        ->options(fn () => Role::query()->where('name', '!=', RoleName::PengajuKegiatan->value)->orderBy('name')
+                            ->pluck('name', 'name')->map(fn (string $n) => RoleName::labelFor($n)))
                         ->hidden(fn (Get $get): bool => (bool) $get('target_all')),
                     Select::make('divisions')->label('Divisi')->multiple()
                         ->options(fn () => Division::query()->orderBy('name')->pluck('name', 'id'))
                         ->hidden(fn (Get $get): bool => (bool) $get('target_all')),
                     Select::make('users')->label('Pengurus tertentu')->multiple()->searchable()
-                        ->options(fn () => User::query()->active()->whereHas('roles')->orderBy('name')->pluck('name', 'id'))
+                        ->options(fn () => User::query()->active()->whereHas('roles')->withoutRole(RoleName::PengajuKegiatan->value)
+                            ->orderBy('name')->pluck('name', 'id'))
                         ->hidden(fn (Get $get): bool => (bool) $get('target_all')),
+                ]),
+            // Keputusan Fase 7: target organisasi terpisah dari target pengurus.
+            Section::make('Penerima organisasi (pengaju kegiatan)')
+                ->description('Terpisah dari pengurus: penerimanya akun pengaju aktif di organisasi yang dipilih.')
+                ->columns(2)
+                ->columnSpanFull()
+                ->schema([
+                    Toggle::make('target_all_organizations')->label('Semua organisasi')->default(false)->live(),
+                    Select::make('organizations')->label('Organisasi tertentu')->multiple()->searchable()
+                        ->options(fn () => Organization::query()->active()->where('type', '!=', 'bem')->orderBy('name')->pluck('name', 'id'))
+                        ->hidden(fn (Get $get): bool => (bool) $get('target_all_organizations')),
                 ]),
         ]);
     }

@@ -23,13 +23,13 @@ it('mengirim security headers', function (): void {
 });
 
 it('membuat 10 role bawaan dan semua permission kustom', function (): void {
-    expect(Role::count())->toBe(10);
+    expect(Role::count())->toBe(11);
 
     foreach (RoleName::cases() as $role) {
         expect(Role::where('name', $role->value)->exists())->toBeTrue();
     }
 
-    expect(RolePermissionSeeder::customPermissions())->toHaveCount(35);
+    expect(RolePermissionSeeder::customPermissions())->toHaveCount(37);
 
     foreach (RolePermissionSeeder::customPermissions() as $permission) {
         expect(Permission::where('name', $permission)->exists())->toBeTrue();

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Enums\DownloadCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Division;
+use App\Models\Download;
 use App\Models\Period;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -44,6 +46,16 @@ class PageController extends Controller
     public function contact(): View
     {
         return view('public.contact');
+    }
+
+    /** Halaman informasi pengajuan kegiatan (pengajuan dilakukan setelah login, keputusan Fase 7). */
+    public function submissions(): View
+    {
+        return view('public.submissions', [
+            'templates' => Download::query()->active()
+                ->whereIn('category', [DownloadCategory::ProposalTemplate->value, DownloadCategory::LpjTemplate->value])
+                ->orderBy('category')->orderBy('title')->get(),
+        ]);
     }
 
     public function comingSoon(Request $request): View

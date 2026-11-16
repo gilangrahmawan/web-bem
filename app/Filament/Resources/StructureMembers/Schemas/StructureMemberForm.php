@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StructureMembers\Schemas;
 
+use App\Enums\RoleName;
 use App\Filament\Support\WebpImageUpload;
 use App\Models\Period;
 use App\Models\User;
@@ -36,7 +37,8 @@ class StructureMemberForm
                             ->placeholder('Tanpa divisi (tampil di bagian Pimpinan)'),
                         Select::make('user_id')
                             ->label('Tautkan ke akun pengurus (opsional)')
-                            ->relationship('user', 'name')
+                            // Pengaju kegiatan bukan pengurus → tidak bisa ditautkan ke struktur.
+                            ->relationship('user', 'name', fn ($query) => $query->withoutRole(RoleName::PengajuKegiatan->value))
                             ->searchable()
                             ->preload()
                             ->live()

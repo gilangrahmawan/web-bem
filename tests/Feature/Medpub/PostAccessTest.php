@@ -87,7 +87,8 @@ it('akses halaman Konten: semua pengurus melihat, hanya pembuat konten bisa memb
 
     foreach (RoleName::cases() as $role) {
         $user = member($role);
-        actingAs($user)->get('/panel-bem/konten')->assertOk();
+        // Pengaju kegiatan bukan pengurus BEM: tidak melihat konten internal.
+        actingAs($user)->get('/panel-bem/konten')->assertStatus($role === RoleName::PengajuKegiatan ? 403 : 200);
         actingAs($user)->get('/panel-bem/konten/create')->assertStatus(in_array($role, $creators, true) ? 200 : 403);
     }
 });

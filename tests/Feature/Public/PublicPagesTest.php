@@ -24,12 +24,13 @@ it('semua halaman publik dapat dibuka', function (string $url): void {
     'galeri' => '/galeri',
     'unduhan' => '/unduhan',
     'kalender' => '/kalender',
+    'pengajuan' => '/pengajuan',
     'kontak' => '/kontak',
 ]);
 
 it('halaman layanan yang belum dibuat menampilkan "segera hadir"', function (string $url): void {
     get($url)->assertOk()->assertSee('Segera hadir')->assertSee('noindex', false);
-})->with(['/pengajuan', '/pengajuan/status', '/oprec', '/oprec/hasil']);
+})->with(['/oprec', '/oprec/hasil']);
 
 it('divisi yang tidak ada menghasilkan 404 bergaya situs', function (): void {
     get('/divisi/tidak-ada')->assertNotFound()->assertSee('Halaman tidak ditemukan');

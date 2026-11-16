@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Panel\ActivityFileController;
 use App\Http\Controllers\Panel\AnnouncementAttachmentController;
 use App\Http\Controllers\Panel\PostImageController;
 use App\Http\Controllers\Panel\TaskResultController;
@@ -62,10 +63,12 @@ Route::name('public.')->group(function (): void {
         ->middleware('throttle:public-status')
         ->name('aspirations.check');
 
-    // Placeholder "segera hadir" — diganti di Fase 7 (pengajuan & oprec).
+    // Pengajuan kegiatan: halaman informasi; pengajuan dilakukan setelah login (Fase 7).
+    Route::get('/pengajuan', [PageController::class, 'submissions'])->name('submissions.create');
+    Route::permanentRedirect('/pengajuan/status', '/pengajuan')->name('submissions.status');
+
+    // Placeholder "segera hadir" — diganti di Fase 7B (oprec).
     $soon = [
-        'submissions.create' => ['/pengajuan', 'Pengajuan Proposal & LPJ'],
-        'submissions.status' => ['/pengajuan/status', 'Cek Status Pengajuan'],
         'recruitment.create' => ['/oprec', 'Open Recruitment'],
         'recruitment.results' => ['/oprec/hasil', 'Pengumuman Oprec'],
     ];
@@ -89,6 +92,10 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
         Route::get('/konten/{post}/gambar', PostImageController::class)
             ->whereNumber('post')
             ->name('posts.image');
+        Route::get('/kegiatan/{activity}/berkas/{type}', ActivityFileController::class)
+            ->whereNumber('activity')
+            ->whereIn('type', ['proposal', 'lpj'])
+            ->name('activities.file');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

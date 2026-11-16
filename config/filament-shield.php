@@ -11,6 +11,7 @@ use App\Filament\Pages\MyProfile;
 use App\Filament\Pages\MyTasks;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Resources\Announcements\AnnouncementResource;
+use App\Filament\Resources\ApplicantAccounts\ApplicantAccountResource;
 use App\Filament\Resources\Aspirations\AspirationResource;
 use App\Filament\Resources\Discussions\DiscussionResource;
 use App\Filament\Resources\Divisions\DivisionResource;
@@ -18,11 +19,16 @@ use App\Filament\Resources\Downloads\DownloadResource;
 use App\Filament\Resources\Dues\DueResource;
 use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Letters\LetterResource;
+use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Filament\Resources\Periods\PeriodResource;
 use App\Filament\Resources\Posts\PostResource;
 use App\Filament\Resources\Programs\ProgramResource;
 use App\Filament\Resources\StructureMembers\StructureMemberResource;
+use App\Filament\Resources\StudentActivities\StudentActivityResource;
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Widgets\ActivitiesByOrganizationChart;
+use App\Filament\Widgets\ActivityQueueWidget;
+use App\Filament\Widgets\ActivityStatusChart;
 use App\Filament\Widgets\AspirationStatusChart;
 use App\Filament\Widgets\AspirationWeeklyChart;
 use App\Filament\Widgets\ContentQueueWidget;
@@ -33,9 +39,12 @@ use App\Filament\Widgets\KasArrearsByDivisionChart;
 use App\Filament\Widgets\KasStatsOverview;
 use App\Filament\Widgets\KasStatusChart;
 use App\Filament\Widgets\KasWeeklyChart;
+use App\Filament\Widgets\LpjDeadlineWidget;
 use App\Filament\Widgets\MessageReadRateChart;
+use App\Filament\Widgets\MyActivitiesChart;
 use App\Filament\Widgets\MyKasWidget;
 use App\Filament\Widgets\MyPostsChart;
+use App\Filament\Widgets\OverdueLpjWidget;
 use App\Filament\Widgets\PostsPublishedChart;
 use App\Filament\Widgets\PostStatusChart;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
@@ -132,6 +141,10 @@ return [
             LetterResource::class,
             // Fase 6: dijaga PostPolicy + permission kustom post.*.
             PostResource::class,
+            // Fase 7A: dijaga policy + permission kustom (activity.submit, submission.*, applicant.manage).
+            StudentActivityResource::class,
+            OrganizationResource::class,
+            ApplicantAccountResource::class,
         ],
     ],
 
@@ -174,6 +187,13 @@ return [
             PostsPublishedChart::class,
             ContentQueueWidget::class,
             MyPostsChart::class,
+            // Widget Fase 7A.
+            ActivityStatusChart::class,
+            ActivityQueueWidget::class,
+            OverdueLpjWidget::class,
+            ActivitiesByOrganizationChart::class,
+            MyActivitiesChart::class,
+            LpjDeadlineWidget::class,
         ],
     ],
 
@@ -211,6 +231,8 @@ return [
         'submission.verify' => 'Verifikasi pengajuan',
         'submission.review_budget' => 'Review anggaran pengajuan',
         'submission.decide' => 'Putuskan pengajuan',
+        'activity.submit' => 'Ajukan kegiatan',
+        'applicant.manage' => 'Kelola akun pengaju & organisasi',
         'recruitment.manage' => 'Kelola oprec',
         'chat.use' => 'Gunakan chat',
         'report.view' => 'Lihat laporan',

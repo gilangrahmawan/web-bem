@@ -15,12 +15,12 @@ class DiscussionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->is_active;
+        return $user->is_active && ! $user->isApplicant();
     }
 
     public function view(User $user, Discussion $discussion): bool
     {
-        return $user->is_active;
+        return $this->viewAny($user);
     }
 
     public function create(User $user): bool
