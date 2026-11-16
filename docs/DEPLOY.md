@@ -343,5 +343,6 @@ Upload ulang `public/build` bila tampilan/JS berubah. **Jangan** menjalankan `db
 | Push tidak sampai | Cron tidak jalan / VAPID kosong / bukan HTTPS | Cek cron & `php artisan schedule:list`; isi VAPID; gunakan HTTPS |
 | Chat tidak real-time | Kredensial Pusher salah | Cek `PUSHER_*`; sementara set `BROADCAST_CONNECTION=log` (polling 5 detik) |
 | Backup gagal | `mysqldump` tidak ditemukan / password backup kosong | Isi `DB_DUMP_BINARY_PATH`; isi `BACKUP_ARCHIVE_PASSWORD` |
+| Tombol *Backup database sekarang* gagal: "Folder sementara sistem (TEMP/TMP)…" | Proses web PHP tidak punya folder sementara yang bisa ditulisi (lokal: `php artisan serve` versi lama; hosting: `/tmp` dibatasi) | Lokal: hentikan & jalankan ulang `php artisan serve`. Hosting: minta pengelola memastikan `/tmp` dapat ditulisi PHP (atau periksa `open_basedir`) |
 | Pesan chat lama jadi rusak | `APP_KEY` berganti | Kembalikan `APP_KEY` lama dari pengelola kata sandi |
 | Ketua terkunci 2FA | HP & kode pemulihan hilang | `php artisan bem:reset-2fa email@...` |

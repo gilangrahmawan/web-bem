@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\BackupInventory;
+use App\Services\BackupRunner;
 use App\Support\Format;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -12,7 +13,6 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Facades\Artisan;
 use Throwable;
 use UnitEnum;
 
@@ -52,18 +52,16 @@ class Backups extends Page
                 ->requiresConfirmation()
                 ->modalDescription('Membuat backup database saat ini (beberapa detik). Backup berkas penuh berjalan otomatis tiap Minggu.')
                 ->action(function (): void {
-                    try {
-                        $exit = Artisan::call('backup:run', ['--only-db' => true]);
-                    } catch (Throwable $e) {
-                        report($e);
-                        $exit = 1;
-                    }
+                    $result = app(BackupRunner::class)->runDatabaseBackup();
 
-                    app(ActivityLogger::class)->log('backup.manual_run', null, ['exit' => $exit]);
+                    app(ActivityLogger::class)->log('backup.manual_run', null, [
+                        'ok' => $result['ok'],
+                        'message' => mb_substr($result['message'], 0, 300),
+                    ]);
 
-                    $exit === 0
+                    $result['ok']
                         ? Notification::make()->title('Backup database selesai')->success()->send()
-                        : Notification::make()->title('Backup gagal')->body('Periksa konfigurasi mysqldump & BACKUP_ARCHIVE_PASSWORD (lihat DEPLOY.md).')->danger()->persistent()->send();
+                        : Notification::make()->title('Backup gagal')->body($result['message'])->danger()->persistent()->send();
                 }),
         ];
     }

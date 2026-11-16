@@ -4,6 +4,8 @@ use App\Enums\RoleName;
 use App\Filament\Pages\Backups;
 use App\Models\ActivityLog;
 use App\Notifications\BackupProblemNotification;
+use App\Services\BackupRunner;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Backup\Events\BackupHasFailed;
@@ -71,4 +73,34 @@ it('konfigurasi produksi: backup terenkripsi ke disk terpisah, session terenkrip
         ->and(config('filesystems.disks.backups.root'))->toBe(storage_path('backups'))
         ->and(config('session.http_only'))->toBeTrue()
         ->and(config('session.lifetime'))->toBe(30);
+});
+
+it('pesan backup gagal spesifik & tanpa membocorkan password', function (): void {
+    config([
+        'database.connections.'.config('database.default').'.password' => 'RahasiaDB#991',
+        'backup.backup.password' => 'ArsipRahasia#2026',
+    ]);
+    $runner = app(BackupRunner::class);
+
+    $temp = $runner->explain('Parameter `tempFileHandle` cannot be empty.');
+    expect($temp)->toContain('Folder sementara sistem (TEMP/TMP)')->toContain('jalankan ulang server');
+
+    $dump = $runner->explain("'mysqldump' is not recognized as an internal or external command");
+    expect($dump)->toContain('DB_DUMP_BINARY_PATH');
+
+    $denied = $runner->explain("mysqldump: Got error: 1045: Access denied for user 'root'@'localhost' (using password: YES) --password=RahasiaDB#991 -pRahasiaDB#991");
+    expect($denied)->toContain('DB_USERNAME/DB_PASSWORD')->not->toContain('RahasiaDB#991');
+
+    $other = $runner->explain('Gagal mengenkripsi dengan ArsipRahasia#2026 di D:\kuliah\BEM\bemweb\storage\app\backup-temp\x.zip');
+    expect($other)->not->toContain('ArsipRahasia#2026')->not->toContain('D:\kuliah')->toContain('x.zip');
+});
+
+it('tombol "Backup database sekarang" menampilkan penyebab gagal dari output backup:run', function (): void {
+    Artisan::shouldReceive('call')->once()->with('backup:run', ['--only-db' => true])->andReturn(1);
+    Artisan::shouldReceive('output')->once()->andReturn("Starting backup...\nBackup failed because: Parameter `tempFileHandle` cannot be empty..\n");
+
+    actingAs(superAdmin());
+    livewire(Backups::class)->callAction('runDatabaseBackup')
+        ->assertNotified(Filament\Notifications\Notification::make()->title('Backup gagal')
+            ->body(app(BackupRunner::class)->explain('Parameter `tempFileHandle` cannot be empty..'))->danger()->persistent());
 });

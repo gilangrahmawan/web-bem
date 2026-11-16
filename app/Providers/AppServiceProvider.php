@@ -21,6 +21,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -47,6 +48,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Arsip surat Humas ber-lampiran ke folder sistem Drive "Surat" (Fase 8).
         $this->app->bind(LetterArchiver::class, DriveLetterArchiver::class);
+
+        // `php artisan serve` hanya meneruskan sebagian variabel lingkungan; tanpa TEMP/TMP, PHP di proses
+        // web tidak punya folder sementara (tmpfile() gagal → backup dari halaman Backup gagal).
+        ServeCommand::$passthroughVariables = array_values(array_unique([
+            ...ServeCommand::$passthroughVariables, 'TEMP', 'TMP', 'TMPDIR',
+        ]));
 
         // Hosting dengan document root public_html (PUBLIC_PATH) — berlaku untuk web & artisan.
         if (filled($publicPath = config('app.public_path'))) {
