@@ -7,6 +7,7 @@ use App\Filament\Support\WebpImageUpload;
 use App\Models\User;
 use App\Services\UserAccountService;
 use Filament\Actions\Action;
+use Filament\Auth\MultiFactor\Contracts\MultiFactorAuthenticationProvider;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -15,6 +16,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
@@ -152,7 +154,24 @@ class MyProfile extends Page
                                 ])->key('password-form-actions'),
                             ]),
                     ]),
+                $this->twoFactorSection(),
             ]);
+    }
+
+    /** 2FA (Fase 10): wajib untuk Ketua/Wakil, Sekretaris, Bendahara; sukarela untuk role lain. */
+    private function twoFactorSection(): Section
+    {
+        $user = $this->user();
+
+        return Section::make('Autentikasi dua langkah (2FA)')
+            ->description($user->requiresTwoFactor()
+                ? 'Wajib untuk jabatan Anda. Simpan kode pemulihan di tempat aman — dipakai bila HP hilang.'
+                : 'Opsional, tetapi sangat disarankan. Saat login, selain password Anda memasukkan kode 6 digit dari aplikasi authenticator.')
+            ->schema(collect(Filament::getMultiFactorAuthenticationProviders())
+                ->map(fn (MultiFactorAuthenticationProvider $provider) => Group::make($provider->getManagementSchemaComponents())
+                    ->statePath($provider->getId()))
+                ->values()
+                ->all());
     }
 
     #[Exposed]

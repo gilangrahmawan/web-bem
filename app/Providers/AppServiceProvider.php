@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Listeners\LogAuthenticationActivity;
 use App\Listeners\LogRolePermissionChanges;
+use App\Listeners\NotifyBackupProblems;
 use App\Models\Organization;
 use App\Models\Setting;
 use App\Models\User;
@@ -19,6 +20,7 @@ use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -27,6 +29,9 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Backup\Events\BackupHasFailed;
+use Spatie\Backup\Events\CleanupHasFailed;
+use Spatie\Backup\Events\UnhealthyBackupWasFound;
 use Spatie\Permission\Events\PermissionAttachedEvent;
 use Spatie\Permission\Events\PermissionDetachedEvent;
 use Spatie\Permission\Events\RoleAttachedEvent;
@@ -43,6 +48,11 @@ class AppServiceProvider extends ServiceProvider
         // Arsip surat Humas ber-lampiran ke folder sistem Drive "Surat" (Fase 8).
         $this->app->bind(LetterArchiver::class, DriveLetterArchiver::class);
 
+        // Hosting dengan document root public_html (PUBLIC_PATH) — berlaku untuk web & artisan.
+        if (filled($publicPath = config('app.public_path'))) {
+            $this->app->usePublicPath($publicPath);
+        }
+
         // Akses Drive dihitung sekali per request (pohon folder + izin di-memo).
         $this->app->scoped(DriveAccessResolver::class);
     }
@@ -50,6 +60,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Carbon::setLocale(config('app.locale'));
+
+        // Performa (Fase 10): relasi yang diakses di dalam perulangan dimuat sekaligus (mencegah N+1).
+        Model::automaticallyEagerLoadRelationships();
 
         $this->configurePasswordRules();
         $this->configureSuperAdminGate();
@@ -141,6 +154,9 @@ class AppServiceProvider extends ServiceProvider
         Role::deleted(fn (Role $role) => app(LogRolePermissionChanges::class)->logRole('role.deleted', $role));
 
         $this->registerChatSync();
+
+        // Backup gagal / tidak sehat → lonceng + push ke Super Admin (Fase 10).
+        Event::listen([BackupHasFailed::class, UnhealthyBackupWasFound::class, CleanupHasFailed::class], NotifyBackupProblems::class);
     }
 
     /**

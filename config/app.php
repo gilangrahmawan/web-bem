@@ -55,6 +55,12 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     /*
+    | Folder publik alternatif (Fase 10): isi bila hosting memaksa document root ke public_html
+    | dan isi folder public/ dipindah ke sana (lihat docs/DEPLOY.md). Kosong = folder public/ bawaan.
+    */
+    'public_path' => env('PUBLIC_PATH'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------

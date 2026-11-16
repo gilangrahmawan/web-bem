@@ -25,4 +25,11 @@ return [
         'lockout_seconds' => 15 * 60,
     ],
 
+    // HSTS (Fase 10): JANGAN dinyalakan sebelum HTTPS terbukti normal beberapa hari (lihat DEPLOY.md).
+    // Hanya dikirim pada request HTTPS.
+    'hsts' => [
+        'enabled' => (bool) env('HSTS_ENABLED', false),
+        'max_age' => (int) env('HSTS_MAX_AGE', 31536000),
+    ],
+
 ];

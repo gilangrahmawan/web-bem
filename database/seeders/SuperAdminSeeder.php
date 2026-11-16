@@ -22,6 +22,14 @@ class SuperAdminSeeder extends Seeder
         $config = config('bem.superadmin');
         $marker = (string) config('bem.placeholder_marker', 'GANTI');
 
+        // Produksi (Fase 10): SUPERADMIN_* sengaja dikosongkan → akun Ketua dibuat dengan
+        // `php artisan bem:create-admin` (password tidak pernah ditulis ke .env).
+        if (collect(['name', 'email', 'password'])->every(fn (string $f) => blank($config[$f] ?? null))) {
+            $this->command?->warn('SUPERADMIN_* kosong — dilewati. Buat akun Ketua dengan: php artisan bem:create-admin');
+
+            return;
+        }
+
         foreach (['name', 'email', 'password'] as $field) {
             $value = (string) ($config[$field] ?? '');
 

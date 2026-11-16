@@ -37,6 +37,11 @@ function userWithRole(RoleName|string $role, array $attributes = []): User
     $user = User::factory()->create($attributes);
     $user->assignRole(Role::findByName($roleName, 'web'));
 
+    // Role wajib 2FA (Fase 10) dianggap sudah mengatur 2FA, kecuali test menentukan sendiri.
+    if (! array_key_exists('two_factor_secret', $attributes) && $user->requiresTwoFactor()) {
+        $user->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP'])->save();
+    }
+
     return $user;
 }
 

@@ -1,6 +1,6 @@
 # Catatan Produksi & Lingkungan — Website BEM UBHINUS
 
-Catatan teknis yang **wajib dibaca sebelum deploy** dan saat mengelola server. Panduan deploy lengkap menyusul di `docs/DEPLOY.md` (Fase 10).
+Catatan teknis yang **wajib dibaca sebelum deploy** dan saat mengelola server. Panduan deploy lengkap: [`DEPLOY.md`](DEPLOY.md) (dua jalur: dengan/tanpa SSH, checklist go-live).
 
 ---
 
@@ -13,6 +13,7 @@ Isi **pesan chat disimpan terenkripsi** di database memakai `APP_KEY` (keputusan
 - Simpan salinan `APP_KEY` produksi di tempat aman yang terpisah dari server (mis. pengelola kata sandi milik Ketua & Sekretaris).
 - Saat pindah hosting atau restore backup, salin `APP_KEY` yang **sama** ke `.env` server baru.
 - `APP_KEY` tidak boleh di-commit ke Git dan tidak boleh dibagikan lewat chat.
+- **`BACKUP_ARCHIVE_PASSWORD`** (Fase 10) mengunci ZIP backup: simpan bersama `APP_KEY`. Tanpa password ini backup tidak bisa dibuka; tanpa `APP_KEY` yang sama, chat di backup tidak terbaca.
 
 ## 2. Chat real-time (Pusher Channels)
 
@@ -54,4 +55,4 @@ Sekali jalan saja (Git Bash): `OPENSSL_CONF="C:/Users/<nama>/.config/herd/bin/ph
 - Lampiran chat dihapus otomatis setelah `chat_attachment_retention_months` (12 bulan); teks pesan tetap.
 - Data pribadi pendaftar oprec yang tidak diterima dihapus otomatis setelah `recruitment_retention_months` (6 bulan sejak gelombang ditutup).
 - Sampah Drive dihapus permanen setelah `drive_trash_days` (30 hari).
-- Backup database **dan** folder `storage/app` (Fase 10) — tanpa `APP_KEY` yang sama, backup pesan chat tidak terbaca.
+- Backup otomatis (Fase 10): database harian & berkas mingguan ke `storage/backups` (ZIP AES-256), siap Cloudflare R2 lewat `BACKUP_DISK=r2`. Selama belum R2, unduh backup terbaru tiap bulan ke tempat lain (pengingat otomatis tanggal 1). Lihat DEPLOY.md bagian 12.

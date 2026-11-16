@@ -28,3 +28,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Backup lokal (Fase 10) — berisi data pribadi, jangan pernah di-commit.
+/storage/backups/

@@ -166,6 +166,25 @@ class UserAccountService
         return $temporary;
     }
 
+    /**
+     * Reset 2FA (mis. HP hilang): rahasia & kode pemulihan dihapus, semua session diakhiri.
+     * Role wajib 2FA akan diminta mengatur ulang saat login berikutnya. $actor null = dari perintah server.
+     */
+    public function resetTwoFactor(?User $actor, User $user): void
+    {
+        DB::transaction(function () use ($actor, $user): void {
+            $user->forceFill([
+                'two_factor_secret' => null,
+                'two_factor_recovery_codes' => null,
+                'remember_token' => Str::random(60),
+            ])->save();
+
+            $this->invalidateSessions($user);
+
+            $this->logger->log('user.two_factor_reset', $user, ['by' => $actor ? 'panel' : 'console'], $actor, recordIp: $actor !== null);
+        });
+    }
+
     public function deactivate(User $actor, User $user): void
     {
         DB::transaction(function () use ($actor, $user): void {

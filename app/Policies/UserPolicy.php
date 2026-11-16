@@ -11,7 +11,7 @@ class UserPolicy implements EnforcedForSuperAdmin
     {
         return [
             'delete', 'deleteAny', 'forceDelete', 'forceDeleteAny',
-            'restore', 'restoreAny', 'replicate', 'deactivate',
+            'restore', 'restoreAny', 'replicate', 'deactivate', 'resetTwoFactor',
         ];
     }
 
@@ -43,6 +43,12 @@ class UserPolicy implements EnforcedForSuperAdmin
     public function resetPassword(User $user, User $model): bool
     {
         return $user->can('user.manage') && $this->canTouch($user, $model);
+    }
+
+    /** Reset 2FA (HP hilang): user.manage (Super Admin), bukan untuk diri sendiri. */
+    public function resetTwoFactor(User $user, User $model): bool
+    {
+        return $user->can('user.manage') && ! $user->is($model) && $this->canTouch($user, $model);
     }
 
     public function activate(User $user, User $model): bool

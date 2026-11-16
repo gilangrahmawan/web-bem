@@ -54,3 +54,27 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
     ->everyMinute()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Backup (Fase 10): database harian, berkas mingguan, pembersihan & pemantauan, pengingat bulanan.
+Schedule::command('backup:run --only-db')
+    ->dailyAt('01:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
+Schedule::command('backup:run')
+    ->weeklyOn(0, '01:30')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
+Schedule::command('backup:clean')
+    ->dailyAt('04:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
+Schedule::command('backup:monitor')
+    ->dailyAt('05:00')
+    ->timezone('Asia/Jakarta');
+
+Schedule::command('bem:backup-reminder')
+    ->monthlyOn(1, '08:00')
+    ->timezone('Asia/Jakarta');

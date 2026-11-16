@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Panel\ActivityFileController;
 use App\Http\Controllers\Panel\AnnouncementAttachmentController;
+use App\Http\Controllers\Panel\BackupDownloadController;
 use App\Http\Controllers\Panel\ChatAttachmentController;
 use App\Http\Controllers\Panel\Drive\DocumentExportController;
 use App\Http\Controllers\Panel\Drive\DriveFileController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Public\SeoController;
 use App\Http\Controllers\Public\StudyController;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsurePasswordChanged;
+use App\Http\Middleware\RequireTwoFactorForPrivilegedRoles;
 use Filament\Http\Middleware\SetUpPanel;
 use Illuminate\Support\Facades\Route;
 
@@ -88,7 +90,7 @@ Route::name('public.')->group(function (): void {
 /*
 | Unduhan berkas privat dashboard (di luar Livewire). Login wajib; otorisasi lewat policy.
 */
-Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswordChanged::class])
+Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswordChanged::class, RequireTwoFactorForPrivilegedRoles::class])
     ->prefix('panel-bem')->name('panel.')->group(function (): void {
         Route::get('/tugas/{assignee}/hasil', TaskResultController::class)
             ->whereNumber('assignee')
@@ -127,6 +129,10 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
             ->middleware('throttle:20,1')->name('push.subscribe');
         Route::delete('/push/langganan', [PushSubscriptionController::class, 'destroy'])
             ->middleware('throttle:20,1')->name('push.unsubscribe');
+
+        // Backup (Fase 10): khusus Super Admin.
+        Route::get('/backup/unduh', BackupDownloadController::class)
+            ->middleware('throttle:10,1')->name('backups.download');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Filament\Pages\Backups;
 use App\Filament\Pages\Calendar;
 use App\Filament\Pages\ChangePassword;
 use App\Filament\Pages\Chat;
@@ -185,6 +186,7 @@ return [
             DocumentEditor::class,  // dokumen Drive; dijaga DocumentPolicy
             Chat::class,            // semua pemakai chat (bukan Pembina); isi dibatasi ConversationPolicy (Fase 9)
             NotificationSettings::class, // semua pengguna panel (hanya preferensi & perangkat miliknya)
+            Backups::class,         // khusus Super Admin aktif (Fase 10)
         ],
     ],
 

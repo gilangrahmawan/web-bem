@@ -468,6 +468,7 @@ Semua tabel: `id`, `timestamps`. (SD) = soft delete.
 | `conversation_members` | conversation_id, user_id, role (admin/member), last_read_at, muted |
 | `messages` (SD) | conversation_id, user_id, body (**terenkripsi**, cast `encrypted`), attachment_path/name/mime/size, attachment_expired_at, reply_to_id |
 | `users` (tambahan Fase 9) | notification_preferences (JSON, push per jenis; lonceng selalu masuk) |
+| `users` (tambahan Fase 10) | two_factor_recovery_codes (terenkripsi; 2FA TOTP bawaan Filament) |
 
 Tambahkan index pada kolom yang sering difilter: `status`, `tracking_code`, `starts_at`, `division_id`, `category`.
 
@@ -590,6 +591,7 @@ Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib logi
 4a. Cek ulang dashboard: setiap role (termasuk pembina) punya minimal satu widget grafik yang mengikuti hak aksesnya; tambahkan bila belum.
 5. Tulis `docs/DEPLOY.md` (syarat hosting; clone; `composer install --no-dev --optimize-autoloader`; `npm run build` di lokal lalu upload `public/build` bila hosting tanpa Node; `.env` produksi; `key:generate`; `migrate --force`; seeder tanpa DemoSeeder; `storage:link`; document root ke `public/`; cron `* * * * * cd /path && php artisan schedule:run >> /dev/null 2>&1`; checklist `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, Cloudflare, kredensial Pusher/VAPID/Turnstile). **Peringatan wajib:** `APP_KEY` produksi harus dibackup dan TIDAK BOLEH di-generate ulang setelah dipakai (isi chat terenkripsi tidak akan terbaca) — rujuk `docs/CATATAN-PRODUKSI.md`.
 6. Tulis `docs/PANDUAN-PENGURUS.md` (login pertama, aktifkan notifikasi, panduan per role).
+7. **Selesai** (keputusan pemilik): 2FA TOTP bawaan Filament + 8 kode pemulihan, wajib super_admin/sekretaris/bendahara lewat `RequireTwoFactorForPrivilegedRoles` (juga di route berkas panel; ganti password dulu, baru 2FA), opsional role lain di Profil Saya, Reset 2FA oleh Super Admin & `bem:reset-2fa`; `bem:create-admin` interaktif (password tidak ke `.env`; `SuperAdminSeeder` dilewati bila `SUPERADMIN_*` kosong); backup `spatie/laravel-backup` ke disk `backups` (siap R2), ZIP AES-256 `BACKUP_ARCHIVE_PASSWORD`, gagal → lonceng+push Super Admin, halaman *Backup* (unduh/backup DB sekarang), pengingat bulanan `bem:backup-reminder`; HSTS lewat `HSTS_ENABLED` (default mati); session terenkripsi & cookie Secure otomatis di HTTPS; `PUBLIC_PATH` untuk hosting `public_html`; `Model::automaticallyEagerLoadRelationships()` + index tambahan; test setiap role punya ≥1 grafik; `bem:export-data`/`bem:import-data` (ZIP + `--dry-run`, tanpa akun & data demo, setting teknis tidak ikut); dokumen `docs/DEPLOY.md`, `docs/PANDUAN-PENGURUS.md`, `docs/AUDIT-KEAMANAN.md`.
 
 ---
 

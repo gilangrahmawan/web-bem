@@ -23,6 +23,11 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
+        // HSTS hanya bila dinyalakan eksplisit (HSTS_ENABLED=true) dan request memang HTTPS.
+        if (config('bem.hsts.enabled') && $request->isSecure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age='.config('bem.hsts.max_age').'; includeSubDomains');
+        }
+
         if (! $response->headers->has('Content-Security-Policy')) {
             $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy());
         }

@@ -57,6 +57,14 @@ it('SuperAdminSeeder menolak berjalan selama .env masih placeholder', function (
     expect(User::count())->toBe(0);
 });
 
+it('SuperAdminSeeder dilewati bila SUPERADMIN_* kosong (produksi memakai bem:create-admin)', function (): void {
+    config(['bem.superadmin' => ['name' => null, 'email' => '', 'password' => null]]);
+
+    $this->seed(SuperAdminSeeder::class);
+
+    expect(User::count())->toBe(0);
+});
+
 it('SuperAdminSeeder membuat Ketua yang wajib ganti password', function (): void {
     config(['bem.superadmin' => [
         'name' => 'Ketua BEM',

@@ -46,6 +46,12 @@ class Setting extends Model
         return static::allValues()[$key] ?? $default;
     }
 
+    /** Dipakai saat settings diubah tanpa event model (mis. bem:import-data). */
+    public static function flushCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
+
     public static function set(string $key, mixed $value): void
     {
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);

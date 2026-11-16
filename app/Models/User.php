@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\NotificationCategory;
 use App\Enums\RoleName;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
@@ -21,7 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
 /**
  * Pengurus BEM. User tidak pernah dihapus permanen; gunakan is_active=false.
  */
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
@@ -46,6 +48,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'password',
         'remember_token',
         'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     protected function casts(): array
@@ -58,6 +61,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
             'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
             'notification_preferences' => 'array',
         ];
     }
@@ -152,6 +156,48 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         return (bool) (($this->notification_preferences ?? [])[$category->value] ?? true);
+    }
+
+    /** Role yang WAJIB 2FA (AGENTS.md B4/Fase 10). Role lain boleh mengaktifkan sukarela. */
+    public const TWO_FACTOR_REQUIRED_ROLES = [RoleName::SuperAdmin, RoleName::Sekretaris, RoleName::Bendahara];
+
+    public function requiresTwoFactor(): bool
+    {
+        return $this->hasAnyRole(array_map(fn (RoleName $r) => $r->value, self::TWO_FACTOR_REQUIRED_ROLES));
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return filled($this->two_factor_secret);
+    }
+
+    // ---- MFA bawaan Filament (aplikasi authenticator / TOTP) ----
+
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->two_factor_secret;
+    }
+
+    public function saveAppAuthenticationSecret(#[\SensitiveParameter] ?string $secret): void
+    {
+        $this->forceFill(['two_factor_secret' => $secret])->save();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email;
+    }
+
+    /** @return array<string>|null */
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        return $this->two_factor_recovery_codes;
+    }
+
+    /** @param  array<string>|null  $codes */
+    public function saveAppAuthenticationRecoveryCodes(#[\SensitiveParameter] ?array $codes): void
+    {
+        $this->forceFill(['two_factor_recovery_codes' => $codes])->save();
     }
 
     public function isSuperAdmin(): bool

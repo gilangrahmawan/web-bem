@@ -17,6 +17,7 @@
         "mews/purifier": "^3.4",
         "phpoffice/phpword": "^1.4",
         "pusher/pusher-php-server": "^7.3",
+        "spatie/laravel-backup": "^10.4",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {

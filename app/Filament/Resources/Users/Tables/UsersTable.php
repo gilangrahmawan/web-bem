@@ -60,6 +60,7 @@ class UsersTable
                 EditAction::make(),
                 ActionGroup::make([
                     self::resetPasswordAction(),
+                    self::resetTwoFactorAction(),
                     self::deactivateAction(),
                     self::activateAction(),
                 ]),
@@ -80,6 +81,23 @@ class UsersTable
                 $password = app(UserAccountService::class)->resetPassword(Auth::user(), $record);
 
                 self::notifyTemporaryPassword($record, $password);
+            });
+    }
+
+    private static function resetTwoFactorAction(): Action
+    {
+        return Action::make('resetTwoFactor')
+            ->label('Reset 2FA')
+            ->icon(Heroicon::OutlinedDevicePhoneMobile)
+            ->color('warning')
+            ->requiresConfirmation()
+            ->modalDescription('Untuk HP hilang/ganti. Aplikasi authenticator & kode pemulihan lama tidak berlaku, semua session diakhiri. Bila jabatannya wajib 2FA, user diminta mengatur ulang saat login.')
+            ->visible(fn (User $record): bool => $record->hasTwoFactorEnabled() && Gate::allows('resetTwoFactor', $record))
+            ->action(function (User $record): void {
+                Gate::authorize('resetTwoFactor', $record);
+                app(UserAccountService::class)->resetTwoFactor(Auth::user(), $record);
+
+                Notification::make()->title('2FA '.$record->name.' direset')->success()->send();
             });
     }
 

@@ -8,8 +8,10 @@ use App\Filament\Pages\MyProfile;
 use App\Filament\Pages\NotificationSettings;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsurePasswordChanged;
+use App\Http\Middleware\RequireTwoFactorForPrivilegedRoles;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Actions\Action;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -38,6 +40,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('panel-bem')
             // Tanpa registrasi & tanpa reset password mandiri: akun hanya dibuat/direset Super Admin.
             ->login(Login::class)
+            // 2FA (TOTP, aplikasi authenticator + kode pemulihan) — Fase 10. "Wajib" diaktifkan agar halaman
+            // pengaturan tersedia, tetapi middleware-nya diganti: hanya super_admin/sekretaris/bendahara yang dipaksa.
+            ->multiFactorAuthentication([
+                AppAuthentication::make()->recoverable()->recoveryCodeCount(8)->brandName('BEM UBHINUS'),
+            ], isRequired: true)
+            ->multiFactorAuthenticationRequiredMiddlewareName(RequireTwoFactorForPrivilegedRoles::class)
             ->brandName('BEM UBHINUS')
             ->colors([
                 'primary' => Color::hex('#232361'),
