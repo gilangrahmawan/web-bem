@@ -464,9 +464,10 @@ Semua tabel: `id`, `timestamps`. (SD) = soft delete.
 | `recruitment_applicant_logs` | recruitment_applicant_id, from_status, to_status, note, user_id |
 | `notifications` | bawaan Laravel |
 | `push_subscriptions` | bawaan package webpush |
-| `conversations` | type, name, division_id, created_by |
+| `conversations` | type (personal/division/organization/custom), name, system_key (grup otomatis), personal_key (1:1 unik), division_id, organization_id, created_by, last_message_at |
 | `conversation_members` | conversation_id, user_id, role (admin/member), last_read_at, muted |
-| `messages` (SD) | conversation_id, user_id, body, attachment_path, reply_to_id |
+| `messages` (SD) | conversation_id, user_id, body (**terenkripsi**, cast `encrypted`), attachment_path/name/mime/size, attachment_expired_at, reply_to_id |
+| `users` (tambahan Fase 9) | notification_preferences (JSON, push per jenis; lonceng selalu masuk) |
 
 Tambahkan index pada kolom yang sering difilter: `status`, `tracking_code`, `starts_at`, `division_id`, `category`.
 
@@ -578,6 +579,7 @@ Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib logi
 2. **Push**: package webpush, kunci VAPID di `.env`, tombol Aktifkan notifikasi, simpan subscription, tambahkan channel `webpush` ke semua notifikasi, halaman preferensi notifikasi, panduan iPhone.
 3. **Chat**: migration/model conversations/members/messages; `ConversationSyncService` (grup divisi otomatis, tanpa pembina & tanpa `pengaju_kegiatan`; **grup organisasi** otomatis untuk pengaju — lihat C6); broadcasting Pusher + otorisasi `routes/channels.php`; fallback polling; halaman kustom **Chat** (Livewire) dengan fitur C6; rate limit 30 pesan/menit; push untuk pesan baru kecuali mute.
 4. Test: non-anggota tak bisa baca/subscribe; Super Admin tak bisa membuka chat personal orang lain; user nonaktif keluar dari grup divisi.
+5. **Selesai** (keputusan pemilik): push lewat antrean `database` + `queue:work --stop-when-empty` tiap menit dari scheduler (lonceng tetap langsung); preferensi per jenis hanya mengatur push; notifikasi baru "pendaftar oprec baru" (Sekretaris + koordinator divisi pilihan) & "folder dibagikan kepada Anda"; isi pesan terenkripsi di database (APP_KEY wajib dibackup, lihat `docs/CATATAN-PRODUKSI.md`); sinyal Pusher tanpa isi pesan; organisasi bertipe BEM tanpa grup organisasi; lampiran gambar ≤2 MB (diperkecil + WebP) & PDF/Office/ZIP ≤10 MB, dihapus otomatis setelah `chat_attachment_retention_months` (12) lewat `chat:maintenance` harian; pesan dihapus = isi & lampiran benar-benar hilang, tampil "Pesan dihapus". Grup otomatis disinkronkan oleh event role Spatie + observer User/Organisasi + saat membuka Chat + `chat:maintenance`.
 
 ## Fase 10 — Penyempurnaan & Deploy
 
@@ -586,7 +588,7 @@ Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib logi
 3. Audit keamanan (laporkan dalam tabel temuan/file/perbaikan): policy & test di setiap resource; aturan upload; tak ada `{!! !!}` tanpa sanitasi; Turnstile & rate limit; security headers; cookie secure/httponly; `composer audit` & `npm audit`.
 4. Performa: index, eager loading, `config:cache`/`route:cache`/`view:cache`.
 4a. Cek ulang dashboard: setiap role (termasuk pembina) punya minimal satu widget grafik yang mengikuti hak aksesnya; tambahkan bila belum.
-5. Tulis `docs/DEPLOY.md` (syarat hosting; clone; `composer install --no-dev --optimize-autoloader`; `npm run build` di lokal lalu upload `public/build` bila hosting tanpa Node; `.env` produksi; `key:generate`; `migrate --force`; seeder tanpa DemoSeeder; `storage:link`; document root ke `public/`; cron `* * * * * cd /path && php artisan schedule:run >> /dev/null 2>&1`; checklist `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, Cloudflare, kredensial Pusher/VAPID/Turnstile).
+5. Tulis `docs/DEPLOY.md` (syarat hosting; clone; `composer install --no-dev --optimize-autoloader`; `npm run build` di lokal lalu upload `public/build` bila hosting tanpa Node; `.env` produksi; `key:generate`; `migrate --force`; seeder tanpa DemoSeeder; `storage:link`; document root ke `public/`; cron `* * * * * cd /path && php artisan schedule:run >> /dev/null 2>&1`; checklist `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, Cloudflare, kredensial Pusher/VAPID/Turnstile). **Peringatan wajib:** `APP_KEY` produksi harus dibackup dan TIDAK BOLEH di-generate ulang setelah dipakai (isi chat terenkripsi tidak akan terbaca) — rujuk `docs/CATATAN-PRODUKSI.md`.
 6. Tulis `docs/PANDUAN-PENGURUS.md` (login pertama, aktifkan notifikasi, panduan per role).
 
 ---

@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Listeners\LogAuthenticationActivity;
 use App\Listeners\LogRolePermissionChanges;
+use App\Models\Organization;
 use App\Models\Setting;
 use App\Models\User;
 use App\Policies\Contracts\EnforcedForSuperAdmin;
+use App\Services\Chat\ConversationSyncService;
 use App\Services\Drive\DriveAccessResolver;
 use App\Services\KasService;
 use App\Services\Letters\DriveLetterArchiver;
@@ -27,6 +29,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Events\PermissionAttachedEvent;
 use Spatie\Permission\Events\PermissionDetachedEvent;
+use Spatie\Permission\Events\RoleAttachedEvent;
+use Spatie\Permission\Events\RoleDetachedEvent;
 use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
@@ -135,5 +139,36 @@ class AppServiceProvider extends ServiceProvider
         Role::created(fn (Role $role) => app(LogRolePermissionChanges::class)->logRole('role.created', $role));
         Role::updated(fn (Role $role) => app(LogRolePermissionChanges::class)->logRole('role.updated', $role));
         Role::deleted(fn (Role $role) => app(LogRolePermissionChanges::class)->logRole('role.deleted', $role));
+
+        $this->registerChatSync();
+    }
+
+    /**
+     * Grup chat otomatis selalu mengikuti role, divisi, organisasi, dan status aktif (Fase 9).
+     * Jaring pengaman tambahan: sinkron saat membuka Chat + `chat:sync` harian.
+     */
+    private function registerChatSync(): void
+    {
+        $syncUser = function (User $user): void {
+            app(ConversationSyncService::class)->syncUser($user);
+        };
+
+        Event::listen([RoleAttachedEvent::class, RoleDetachedEvent::class], function ($event) use ($syncUser): void {
+            if ($event->model instanceof User) {
+                $syncUser($event->model);
+            }
+        });
+
+        User::saved(function (User $user) use ($syncUser): void {
+            if ($user->wasRecentlyCreated || $user->wasChanged(['is_active', 'division_id', 'organization_id'])) {
+                $syncUser($user);
+            }
+        });
+
+        Organization::saved(function (Organization $organization): void {
+            if ($organization->wasRecentlyCreated || $organization->wasChanged(['is_active', 'type', 'name'])) {
+                app(ConversationSyncService::class)->syncAll();
+            }
+        });
     }
 }

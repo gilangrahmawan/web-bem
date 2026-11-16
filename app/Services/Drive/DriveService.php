@@ -17,12 +17,15 @@ use App\Models\Folder;
 use App\Models\FolderPermission;
 use App\Models\Setting;
 use App\Models\User;
+use App\Notifications\DriveFolderSharedNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -366,7 +369,7 @@ class DriveService
         $this->authorize($actor, 'share', $folder);
         $this->assertValidGrantee($type, $granteeId);
 
-        return DB::transaction(function () use ($actor, $folder, $type, $granteeId, $access): FolderPermission {
+        $permission = DB::transaction(function () use ($actor, $folder, $type, $granteeId, $access): FolderPermission {
             $permission = FolderPermission::query()->updateOrCreate(
                 ['folder_id' => $folder->getKey(), 'grantee_type' => $type->value, 'grantee_id' => $granteeId],
                 ['access' => $access->value, 'granted_by' => $actor->getKey()],
@@ -377,6 +380,33 @@ class DriveService
 
             return $permission;
         });
+
+        // Notifikasi hanya untuk izin baru atau akses yang berubah.
+        if ($permission->wasRecentlyCreated || $permission->wasChanged('access')) {
+            $this->notifyShared($actor, $folder, $type, $granteeId, $access);
+        }
+
+        return $permission;
+    }
+
+    /** "Folder dibagikan kepada Anda" ke penerima aktif (role/divisi → semua anggotanya), kecuali pembagi. */
+    private function notifyShared(User $actor, Folder $folder, DriveGranteeType $type, int $granteeId, DriveAccess $access): void
+    {
+        try {
+            $query = User::query()->where('is_active', true)->whereKeyNot($actor->getKey());
+
+            $recipients = match ($type) {
+                DriveGranteeType::User => $query->whereKey($granteeId)->get(),
+                DriveGranteeType::Division => $query->where('division_id', $granteeId)->get(),
+                DriveGranteeType::Role => $query->whereHas('roles', fn ($q) => $q->whereKey($granteeId))->get(),
+            };
+
+            $recipients = $recipients->filter(fn (User $u) => $this->access->canUseDrive($u) && ! $this->access->seesAll($u));
+
+            Notification::send($recipients, new DriveFolderSharedNotification($folder, $access->value, $actor->name));
+        } catch (\Throwable $e) {
+            Log::warning('Notifikasi berbagi folder gagal dikirim.', ['folder_id' => $folder->getKey(), 'error' => $e->getMessage()]);
+        }
     }
 
     public function unshare(User $actor, FolderPermission $permission): void

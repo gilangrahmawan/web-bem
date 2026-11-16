@@ -2,16 +2,22 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationCategory;
 use App\Filament\Resources\StudentActivities\StudentActivityResource;
 use App\Models\StudentActivity;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /** Notifikasi kegiatan: status proposal/LPJ, pindah penanggung jawab, pengingat tenggat LPJ. */
-class ActivityNotification extends Notification
+class ActivityNotification extends Notification implements ShouldQueue
 {
+    use Queueable, SendsWebPush;
+
     public function __construct(
         public StudentActivity $activity,
         public string $title,
@@ -22,7 +28,12 @@ class ActivityNotification extends Notification
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database'];
+        return $this->channelsFor($notifiable);
+    }
+
+    public function pushCategory(): NotificationCategory
+    {
+        return NotificationCategory::Activities;
     }
 
     /** @return array<string, mixed> */

@@ -56,7 +56,18 @@ class BuildBrandAssets extends Command
             ->insert($logo, 0, 0, 'center')
             ->encode(new PngEncoder)->save($target.'/og-default.png');
 
-        $this->info('Aset logo dibuat di public/images dan public/favicon.png.');
+        // Ikon PWA (manifest): biasa (latar transparan) + maskable (latar navy, logo di zona aman ±60%).
+        foreach ([192, 512] as $size) {
+            $manager->decodePath($bem)->contain($size, $size, 'ffffff00')
+                ->encode(new PngEncoder)->save($target."/icon-{$size}.png");
+
+            $inner = $manager->decodePath($bem)->scaleDown((int) round($size * 0.6), (int) round($size * 0.6));
+            $manager->createImage($size, $size)->fill('232361')
+                ->insert($inner, 0, 0, 'center')
+                ->encode(new PngEncoder)->save($target."/icon-maskable-{$size}.png");
+        }
+
+        $this->info('Aset logo dibuat di public/images dan public/favicon.png (termasuk ikon PWA).');
 
         return self::SUCCESS;
     }

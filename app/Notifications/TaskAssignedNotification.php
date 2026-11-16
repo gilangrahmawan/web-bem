@@ -2,23 +2,34 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationCategory;
 use App\Filament\Pages\MyTasks;
 use App\Models\EventAssignee;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use App\Support\Format;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /** Tugas konten baru ditugaskan (AGENTS.md C5). Channel webpush menyusul di Fase 9. */
-class TaskAssignedNotification extends Notification
+class TaskAssignedNotification extends Notification implements ShouldQueue
 {
+    use Queueable, SendsWebPush;
+
     public function __construct(public EventAssignee $assignee) {}
 
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database'];
+        return $this->channelsFor($notifiable);
+    }
+
+    public function pushCategory(): NotificationCategory
+    {
+        return NotificationCategory::Tasks;
     }
 
     /** @return array<string, mixed> */

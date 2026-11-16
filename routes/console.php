@@ -42,3 +42,15 @@ Schedule::command('drive:purge-trash')
     ->dailyAt('02:30')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
+
+// Perawatan chat: sinkron grup otomatis + hapus lampiran chat > 12 bulan.
+Schedule::command('chat:maintenance')
+    ->dailyAt('03:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
+// Worker antrean (push notification) tanpa Supervisor: diproses tiap menit lalu berhenti (AGENTS.md B2).
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->runInBackground();

@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Auth\Login;
 use App\Filament\AvatarProviders\InitialsAvatarProvider;
 use App\Filament\Pages\MyProfile;
+use App\Filament\Pages\NotificationSettings;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsurePasswordChanged;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -18,6 +19,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -42,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->sidebarCollapsibleOnDesktop()
-            // Lonceng notifikasi (channel database). Web Push menyusul di Fase 9.
+            // Lonceng notifikasi (channel database) + Web Push (Fase 9, lihat halaman Notifikasi).
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->navigationGroups([
@@ -58,7 +60,14 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Profil Saya')
                     ->icon(Heroicon::OutlinedUserCircle)
                     ->url(fn (): string => MyProfile::getUrl()),
+                Action::make('notification-settings')
+                    ->label('Notifikasi')
+                    ->icon(Heroicon::OutlinedBellAlert)
+                    ->url(fn (): string => NotificationSettings::getUrl()),
             ])
+            // PWA (manifest, ikon iOS) + service worker & koneksi real-time chat (Pusher) — Fase 9.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.partials.pwa-head')->render())
+            ->renderHook(PanelsRenderHook::BODY_END, fn (): string => view('filament.partials.realtime')->render())
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

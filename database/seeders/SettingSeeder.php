@@ -19,6 +19,7 @@ class SettingSeeder extends Seeder
             'recruitment_retention_months' => 6,
             'drive_quota_mb' => 2048,
             'drive_trash_days' => 30,
+            'chat_attachment_retention_months' => 12,
             'cabinet_name' => 'Kabinet (isi nama kabinet)',
             'vision' => 'Visi BEM UBHINUS (isi dari dashboard: Pengaturan → Pengaturan Website).',
             'mission' => "Misi pertama\nMisi kedua\nMisi ketiga",

@@ -2,16 +2,22 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationCategory;
 use App\Filament\Pages\KasWeekly;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use App\Support\Format;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /** Rekap bulanan kas ke Bendahara (command kas:monthly-recap, tanggal 1 pukul 08:00 WIB). */
-class KasMonthlyRecapNotification extends Notification
+class KasMonthlyRecapNotification extends Notification implements ShouldQueue
 {
+    use Queueable, SendsWebPush;
+
     /**
      * @param  array{month: string, collected_month: int, payments_month: int, dues_month: int,
      *     collected_total: int, arrears: int, clear: int, payers: int}  $recap
@@ -21,7 +27,12 @@ class KasMonthlyRecapNotification extends Notification
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database'];
+        return $this->channelsFor($notifiable);
+    }
+
+    public function pushCategory(): NotificationCategory
+    {
+        return NotificationCategory::Kas;
     }
 
     /** @return array<string, mixed> */

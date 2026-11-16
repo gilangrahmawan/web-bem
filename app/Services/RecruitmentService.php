@@ -8,6 +8,7 @@ use App\Models\RecruitmentApplicant;
 use App\Models\RecruitmentInterview;
 use App\Models\Setting;
 use App\Models\User;
+use App\Notifications\RecruitmentApplicantRegisteredNotification;
 use App\Support\TrackingCode;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -15,6 +16,8 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -76,7 +79,7 @@ class RecruitmentService
         $photoPath = $this->images->storeWebp($photo, 'recruitment/photos', 800, RecruitmentApplicant::DISK);
 
         try {
-            return DB::transaction(function () use ($recruitment, $data, $nim, $first, $second, $cv, $cvPath, $photoPath): RecruitmentApplicant {
+            $applicant = DB::transaction(function () use ($recruitment, $data, $nim, $first, $second, $cv, $cvPath, $photoPath): RecruitmentApplicant {
                 $applicant = $recruitment->applicants()->create([
                     'registration_code' => TrackingCode::generate('REG', fn (string $c) => RecruitmentApplicant::query()->where('registration_code', $c)->exists()),
                     'name' => trim((string) $data['name']),
@@ -108,6 +111,26 @@ class RecruitmentService
             Storage::disk(RecruitmentApplicant::DISK)->delete([$cvPath, $photoPath]);
 
             throw $e;
+        }
+
+        $this->notifyNewApplicant($applicant);
+
+        return $applicant;
+    }
+
+    /** Pendaftar baru → Sekretaris & koordinator divisi pilihan 1/2 (gagal kirim tidak menggagalkan pendaftaran). */
+    private function notifyNewApplicant(RecruitmentApplicant $applicant): void
+    {
+        try {
+            $recipients = User::query()->where('is_active', true)->role('sekretaris')->get()
+                ->merge(User::query()->where('is_active', true)
+                    ->role(['koordinator_kajian', 'koordinator_medpub', 'koordinator_humas'])
+                    ->whereIn('division_id', $applicant->choiceDivisionIds())->get())
+                ->unique('id');
+
+            Notification::send($recipients, new RecruitmentApplicantRegisteredNotification($applicant));
+        } catch (\Throwable $e) {
+            Log::warning('Notifikasi pendaftar oprec gagal dikirim.', ['applicant_id' => $applicant->getKey(), 'error' => $e->getMessage()]);
         }
     }
 

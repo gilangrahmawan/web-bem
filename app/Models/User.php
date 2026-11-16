@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\NotificationCategory;
 use App\Enums\RoleName;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -22,7 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
 
     /** @var list<string> */
     protected $fillable = [
@@ -56,6 +58,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
             'two_factor_secret' => 'encrypted',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -120,6 +123,35 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function getFilamentAvatarUrl(): ?string
     {
         return $this->photo ? Storage::disk('public')->url($this->photo) : null;
+    }
+
+    /**
+     * Boleh memakai chat (AGENTS.md C6): akun aktif ber-role, BUKAN Pembina.
+     * Pengaju kegiatan boleh (personal, grup organisasi, grup buatan sendiri).
+     */
+    public function canUseChat(): bool
+    {
+        if (! $this->is_active || ! $this->roles()->exists()) {
+            return false;
+        }
+
+        return $this->getRoleNames()->reject(fn (string $role) => $role === RoleName::Pembina->value)->isNotEmpty();
+    }
+
+    /** Pengurus BEM (bukan pengaju, bukan Pembina) — anggota grup divisi otomatis. */
+    public function isChatStaff(): bool
+    {
+        return $this->canUseChat() && ! $this->isApplicant();
+    }
+
+    /** Push untuk jenis ini aktif? (null = semua aktif; System selalu aktif). Lonceng tidak terpengaruh. */
+    public function wantsPush(NotificationCategory $category): bool
+    {
+        if ($category === NotificationCategory::System) {
+            return true;
+        }
+
+        return (bool) (($this->notification_preferences ?? [])[$category->value] ?? true);
     }
 
     public function isSuperAdmin(): bool

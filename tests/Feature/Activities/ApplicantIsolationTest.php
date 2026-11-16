@@ -44,6 +44,9 @@ it('JARING PENGAMAN: pengaju hanya bisa membuka halaman yang diizinkan; semua ha
         'filament.admin.pages.ganti-password',
         'filament.admin.pages.kalender',
         'filament.admin.pages.kotak-masuk',
+        // Fase 9: pengaju boleh chat (hanya percakapan miliknya) & mengatur notifikasinya.
+        'filament.admin.pages.chat',
+        'filament.admin.pages.notifikasi',
         'filament.admin.resources.kegiatan.index',
         'filament.admin.resources.kegiatan.create',
     ];

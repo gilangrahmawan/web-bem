@@ -2,24 +2,35 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationCategory;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use App\Support\Format;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /**
  * "Terima kasih, {nama}! Pembayaran kas minggu ke-{n} sebesar Rp5.000 sudah kami terima."
  * Beberapa minggu sekaligus → satu notifikasi dengan rentang minggu (keputusan pemilik).
  */
-class KasPaidNotification extends Notification
+class KasPaidNotification extends Notification implements ShouldQueue
 {
+    use Queueable, SendsWebPush;
+
     /** @param  list<int>  $weeks */
     public function __construct(public array $weeks, public int $total) {}
 
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database'];
+        return $this->channelsFor($notifiable);
+    }
+
+    public function pushCategory(): NotificationCategory
+    {
+        return NotificationCategory::Kas;
     }
 
     /** @return array<string, mixed> */

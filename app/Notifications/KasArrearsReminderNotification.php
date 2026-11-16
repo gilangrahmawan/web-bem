@@ -2,14 +2,20 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationCategory;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use App\Support\Format;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /** Pengingat tunggakan kas/iuran (command kas:remind-arrears, Senin 08:00 WIB). */
-class KasArrearsReminderNotification extends Notification
+class KasArrearsReminderNotification extends Notification implements ShouldQueue
 {
+    use Queueable, SendsWebPush;
+
     public function __construct(
         public int $unpaidWeeks,
         public int $kasArrears,
@@ -19,7 +25,12 @@ class KasArrearsReminderNotification extends Notification
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database'];
+        return $this->channelsFor($notifiable);
+    }
+
+    public function pushCategory(): NotificationCategory
+    {
+        return NotificationCategory::Kas;
     }
 
     /** @return array<string, mixed> */

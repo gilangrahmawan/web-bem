@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Panel\ActivityFileController;
 use App\Http\Controllers\Panel\AnnouncementAttachmentController;
+use App\Http\Controllers\Panel\ChatAttachmentController;
 use App\Http\Controllers\Panel\Drive\DocumentExportController;
 use App\Http\Controllers\Panel\Drive\DriveFileController;
 use App\Http\Controllers\Panel\Drive\DriveFolderZipController;
 use App\Http\Controllers\Panel\PostImageController;
+use App\Http\Controllers\Panel\PushSubscriptionController;
 use App\Http\Controllers\Panel\RecruitmentFileController;
 use App\Http\Controllers\Panel\TaskResultController;
 use App\Http\Controllers\Public\AspirationController;
@@ -117,6 +119,14 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
             ->whereNumber('folder')->middleware('throttle:10,1')->name('drive.folders.zip');
         Route::get('/drive/dokumen/{document}/export/{format}', DocumentExportController::class)
             ->whereNumber('document')->whereIn('format', ['pdf', 'docx'])->middleware('throttle:30,1')->name('drive.documents.export');
+
+        // Chat & push (Fase 9).
+        Route::get('/chat/lampiran/{message}', ChatAttachmentController::class)
+            ->whereNumber('message')->middleware('throttle:120,1')->name('chat.attachment');
+        Route::post('/push/langganan', [PushSubscriptionController::class, 'store'])
+            ->middleware('throttle:20,1')->name('push.subscribe');
+        Route::delete('/push/langganan', [PushSubscriptionController::class, 'destroy'])
+            ->middleware('throttle:20,1')->name('push.unsubscribe');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

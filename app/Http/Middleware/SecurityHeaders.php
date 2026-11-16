@@ -43,9 +43,12 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net".$vite,
             "font-src 'self' data: https://fonts.bunny.net",
             "img-src 'self' data: blob:",
-            "connect-src 'self'".$vite,
-            // Hanya embed peta Google Maps (halaman Kontak).
-            'frame-src https://www.google.com https://challenges.cloudflare.com',
+            // Chat real-time: Pusher Channels (WebSocket + fallback HTTP) — Fase 9.
+            "connect-src 'self' wss://*.pusher.com https://*.pusher.com".$vite,
+            "worker-src 'self'",
+            "manifest-src 'self'",
+            // 'self': pratinjau PDF Drive (iframe same-origin); peta Google Maps (Kontak); Turnstile.
+            "frame-src 'self' https://www.google.com https://challenges.cloudflare.com",
             "frame-ancestors 'self'",
             "base-uri 'self'",
             "form-action 'self'",

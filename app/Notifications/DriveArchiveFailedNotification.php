@@ -2,15 +2,21 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationCategory;
 use App\Models\Announcement;
 use App\Models\User;
+use App\Notifications\Concerns\SendsWebPush;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 /** Ke pengelola Drive: surat terkirim tetapi gagal diarsipkan ke folder "Surat". */
-class DriveArchiveFailedNotification extends Notification
+class DriveArchiveFailedNotification extends Notification implements ShouldQueue
 {
+    use Queueable, SendsWebPush;
+
     public function __construct(
         public Announcement $letter,
         public string $reason,
@@ -19,7 +25,12 @@ class DriveArchiveFailedNotification extends Notification
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database'];
+        return $this->channelsFor($notifiable);
+    }
+
+    public function pushCategory(): NotificationCategory
+    {
+        return NotificationCategory::Drive;
     }
 
     /** @return array<string, mixed> */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Filament\Pages\Calendar;
 use App\Filament\Pages\ChangePassword;
+use App\Filament\Pages\Chat;
 use App\Filament\Pages\DocumentEditor;
 use App\Filament\Pages\Drive;
 use App\Filament\Pages\Inbox;
@@ -11,6 +12,7 @@ use App\Filament\Pages\KasWeekly;
 use App\Filament\Pages\ManageSettings;
 use App\Filament\Pages\MyProfile;
 use App\Filament\Pages\MyTasks;
+use App\Filament\Pages\NotificationSettings;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Resources\Announcements\AnnouncementResource;
 use App\Filament\Resources\ApplicantAccounts\ApplicantAccountResource;
@@ -36,6 +38,8 @@ use App\Filament\Widgets\ActivityQueueWidget;
 use App\Filament\Widgets\ActivityStatusChart;
 use App\Filament\Widgets\AspirationStatusChart;
 use App\Filament\Widgets\AspirationWeeklyChart;
+use App\Filament\Widgets\ChatActivityChart;
+use App\Filament\Widgets\ChatStatsWidget;
 use App\Filament\Widgets\ContentQueueWidget;
 use App\Filament\Widgets\DiscussionStatusChart;
 use App\Filament\Widgets\DriveActivityWidget;
@@ -55,6 +59,7 @@ use App\Filament\Widgets\MyPostsChart;
 use App\Filament\Widgets\OverdueLpjWidget;
 use App\Filament\Widgets\PostsPublishedChart;
 use App\Filament\Widgets\PostStatusChart;
+use App\Filament\Widgets\PushAdoptionChart;
 use App\Filament\Widgets\RecruitmentByDivisionChart;
 use App\Filament\Widgets\RecruitmentDailyChart;
 use App\Filament\Widgets\RecruitmentStatusChart;
@@ -178,6 +183,8 @@ return [
             Inbox::class,           // semua pengurus (hanya pesan miliknya)
             Drive::class,           // pengurus BEM; isi dibatasi DriveAccessResolver + policy (Fase 8)
             DocumentEditor::class,  // dokumen Drive; dijaga DocumentPolicy
+            Chat::class,            // semua pemakai chat (bukan Pembina); isi dibatasi ConversationPolicy (Fase 9)
+            NotificationSettings::class, // semua pengguna panel (hanya preferensi & perangkat miliknya)
         ],
     ],
 
@@ -220,6 +227,10 @@ return [
             DriveStorageWidget::class,
             DriveFileTypesChart::class,
             DriveActivityWidget::class,
+            // Widget Fase 9 (chat & push): hak akses diatur canView().
+            ChatStatsWidget::class,
+            ChatActivityChart::class,
+            PushAdoptionChart::class,
         ],
     ],
 
