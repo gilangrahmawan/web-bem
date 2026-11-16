@@ -16,6 +16,7 @@ class SettingSeeder extends Seeder
         $defaults = [
             'kas_weekly_amount' => 5000,
             'lpj_deadline_days' => 14,
+            'recruitment_retention_months' => 6,
             'cabinet_name' => 'Kabinet (isi nama kabinet)',
             'vision' => 'Visi BEM UBHINUS (isi dari dashboard: Pengaturan → Pengaturan Website).',
             'mission' => "Misi pertama\nMisi kedua\nMisi ketiga",

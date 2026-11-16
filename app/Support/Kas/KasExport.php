@@ -2,10 +2,8 @@
 
 namespace App\Support\Kas;
 
+use App\Support\SpreadsheetExport;
 use Illuminate\Support\Collection;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Writer\CSV\Writer as CsvWriter;
-use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 
 /**
  * Export grid kas mingguan ke XLSX/CSV (OpenSpout, sudah terpasang lewat Filament — tanpa queue).
@@ -66,18 +64,7 @@ class KasExport
     /** @param  list<list<string|int>>  $rows */
     public static function write(array $rows, string $format): string
     {
-        $path = tempnam(sys_get_temp_dir(), 'kas-').'.'.$format;
-        $writer = $format === 'csv' ? new CsvWriter : new XlsxWriter;
-
-        $writer->openToFile($path);
-
-        foreach ($rows as $row) {
-            $writer->addRow(Row::fromValues($row));
-        }
-
-        $writer->close();
-
-        return $path;
+        return SpreadsheetExport::write($rows, $format);
     }
 
     public static function fileName(string $format): string
@@ -87,14 +74,6 @@ class KasExport
 
     public static function sanitize(string|int|null $value): string|int
     {
-        if (is_int($value)) {
-            return $value;
-        }
-
-        $value = (string) $value;
-
-        return $value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true) && $value !== '-'
-            ? "'".$value
-            : $value;
+        return SpreadsheetExport::sanitize($value);
     }
 }

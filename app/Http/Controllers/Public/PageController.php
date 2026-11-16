@@ -8,7 +8,6 @@ use App\Models\Division;
 use App\Models\Download;
 use App\Models\Period;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
@@ -55,13 +54,6 @@ class PageController extends Controller
             'templates' => Download::query()->active()
                 ->whereIn('category', [DownloadCategory::ProposalTemplate->value, DownloadCategory::LpjTemplate->value])
                 ->orderBy('category')->orderBy('title')->get(),
-        ]);
-    }
-
-    public function comingSoon(Request $request): View
-    {
-        return view('public.coming-soon', [
-            'title' => (string) $request->route()->defaults['title'],
         ]);
     }
 }

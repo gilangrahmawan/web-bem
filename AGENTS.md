@@ -378,7 +378,7 @@ User → Role → Permission (`spatie/laravel-permission`). Permission didefinis
 
 `user.manage`, `role.manage`, `setting.manage`, `event.create_ukm`, `event.create_public`, `event.create_meeting`, `event.assign_task`, `event.manage_all`, `kas.manage`, `kas.view_all`, `due.manage`, `discussion.create`, `discussion.set_docs_link`, `discussion.manage_all`, `post.create`, `post.create_press_release`, `post.approve_coordinator`, `post.approve_leader`, `post.publish`, `aspiration.handle`, `aspiration.escalate`, `aspiration.forward_to_kajian`, `aspiration.study`, `announcement.create`, `letter.create`, `folder.manage`, `download.manage`, `submission.verify`, `submission.review_budget`, `submission.decide`, `recruitment.manage`, `chat.use`, `report.view`.
 
-Ditambahkan kemudian (lewat migration data yang hanya menambah): `aspiration.view` (Fase 5), `post.create_study` (Fase 6), `activity.submit` (ajukan kegiatan — pengurus BEM kecuali pembina, dan `pengaju_kegiatan`), `applicant.manage` (kelola akun pengaju & organisasi — super_admin, sekretaris). Review kegiatan memakai `submission.verify` / `submission.review_budget` / `submission.decide`.
+Ditambahkan kemudian (lewat migration data yang hanya menambah): `aspiration.view` (Fase 5), `post.create_study` (Fase 6), `activity.submit` (ajukan kegiatan — pengurus BEM kecuali pembina, dan `pengaju_kegiatan`), `applicant.manage` (kelola akun pengaju & organisasi — super_admin, sekretaris), `recruitment.interview` (Fase 7B — koordinator Kajian/Medpub/Humas: melihat pendaftar yang memilih divisinya & memberi nilai interview). Review kegiatan memakai `submission.verify` / `submission.review_budget` / `submission.decide`.
 
 Resource Filament memakai permission bawaan Shield (`view_any_x`, `create_x`, …) yang dipetakan sesuai matriks.
 
@@ -399,7 +399,7 @@ K = kelola penuh · T = tambah/draft · S = setujui · L = lihat · L-own = hany
 | Surat Humas | K | L | L | L | L | L | L | K | T | L |
 | Kegiatan (proposal/LPJ) | S | K (verifikasi) | T (review anggaran) | T (internal) | T (internal) | T (internal) | T (internal) | T (internal) | T (internal) | L |
 | Berkas unduhan | K | K | — | — | — | — | — | — | — | L |
-| Oprec | K | K | — | — | — | — | — | — | — | L |
+| Oprec | K | K | — | L+nilai (divisi) | — | L+nilai (divisi) | — | L+nilai (divisi) | — | L |
 | Chat | ya | ya | ya | ya | ya | ya | ya | ya | ya | — |
 
 \* Hanya folder yang dibagikan (`folder_permissions`).
@@ -456,8 +456,10 @@ Semua tabel: `id`, `timestamps`. (SD) = soft delete.
 | `downloads` | title, category, description, file_path, size, download_count, is_active |
 | `galleries` / `gallery_photos` | album (title, slug, event_date) / foto (gallery_id, path, caption) |
 | `programs` | division_id, period_id, title, description, status |
-| `recruitments` | name, opens_at, closes_at, open_divisions (JSON), is_active |
-| `recruitment_applicants` | recruitment_id, registration_code, name, nim, prodi, phone, email, division_choice, motivation, cv_path, photo_path, status, interview_at |
+| `recruitments` | name, description, opens_at, closes_at, open_divisions (JSON), is_active, results_published_at, created_by |
+| `recruitment_applicants` | recruitment_id, registration_code (unique), name, nim (unique per gelombang), prodi, batch_year, phone, email, first_choice_division_id, second_choice_division_id, motivation, experience, cv_path, cv_name, photo_path, status, interview_at, interview_location, accepted_division_id, user_id, consent_at, data_purged_at |
+| `recruitment_interviews` | recruitment_applicant_id, interviewer_id, score (1–5), note (internal) — unik per pendaftar + pewawancara |
+| `recruitment_applicant_logs` | recruitment_applicant_id, from_status, to_status, note, user_id |
 | `notifications` | bawaan Laravel |
 | `push_subscriptions` | bawaan package webpush |
 | `conversations` | type, name, division_id, created_by |
@@ -550,7 +552,7 @@ Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib logi
 
 1. **7A — Organisasi & akun pengaju**: tabel `organizations`, kolom `users.organization_id`; role `pengaju_kegiatan` + permission `activity.submit`, `applicant.manage` lewat migration data yang hanya menambah; resource Organisasi & Akun Pengaju (Super Admin & Sekretaris; Sekretaris hanya akun `pengaju_kegiatan`, diuji termasuk manipulasi request); akun baru wajib ganti password. Pengecualian pengaju dari modul internal (kas, pengumuman, struktur, kalender internal, aspirasi, drive, konten, dll.) diuji satu per satu. Akun demo `pengaju.futsal@demo.test` (organisasi contoh "UKM Futsal") hanya lokal.
 1b. **7A — Kegiatan**: `student_activities` + log + pindah penanggung jawab; `ActivityWorkflowService` (submitProposal, verify, reviewBudget, decide, submitLpj, cancel, pindah penanggung jawab) dalam transaction + log + notifikasi; penyetuju ≠ pengaju; cek bentrok kalender saat proposal diajukan (peringatan, boleh lanjut); proposal disetujui → agenda kalender publik (ukm untuk organisasi luar, bem untuk BEM) tertaut, dihapus bila dibatalkan/ditolak; berkas PDF ≤10 MB di disk privat lewat controller berotorisasi; tenggat LPJ dari setting `lpj_deadline_days` (14) + command pengingat harian; titik kait sanksi LPJ terlambat (belum aktif). Halaman publik `/pengajuan` = informasi + template.
-2. **7B — Oprec**: `recruitments`, `recruitment_applicants`; form publik aktif hanya saat dibuka (upload CV/foto); kode `REG-…`; resource (filter divisi, ubah status, jadwal interview, export); halaman hasil; tombol "Jadikan akun pengurus" (membuat user nonaktif).
+2. **7B — Oprec** (selesai): `recruitments`, `recruitment_applicants`, `recruitment_interviews`, `recruitment_applicant_logs`; satu gelombang aktif dalam satu waktu, divisi dibuka (Kajian/Medpub/Humas) diatur per gelombang; form publik aktif hanya saat dibuka (pilihan 1 & 2, CV PDF ≤2 MB, foto ≤2 MB → WebP privat, pernyataan persetujuan data, Turnstile, 5/IP/jam); NIM dinormalisasi & sekali per gelombang; kode `REG-…`; cek hasil dengan kode + NIM (20/IP/jam) menampilkan jadwal interview langsung, keputusan diterima/ditolak baru setelah "Umumkan hasil", nilai & catatan interview tidak pernah tampil; koordinator (`recruitment.interview`) hanya melihat & menilai pendaftar yang memilih divisinya; divisi diterima hanya pilihan 1/2; export Excel/CSV (nilai rata-rata tanpa catatan, aman formula injection); "Jadikan akun pengurus" membuat user nonaktif tanpa role di divisi diterima; `recruitment:purge-personal-data` harian menghapus CV, foto, WA, email pendaftar tidak diterima setelah `recruitment_retention_months` (6) bulan sejak gelombang ditutup.
 3. Widget: BEM (Super Admin, Sekretaris, Bendahara, Pembina) — kegiatan per status, antrean review per tahap, LPJ terlambat, kegiatan per organisasi, rata-rata lama proses; Pengaju — kegiatan saya per status, tenggat LPJ terdekat; Oprec — pendaftar per divisi & per status.
 4. Test alur kegiatan termasuk revisi di tiap tahap, LPJ hanya setelah proposal disetujui, pindah penanggung jawab, pengingat tidak dobel, integrasi kalender; form oprec tertutup di luar jadwal.
 

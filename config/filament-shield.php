@@ -23,6 +23,8 @@ use App\Filament\Resources\Organizations\OrganizationResource;
 use App\Filament\Resources\Periods\PeriodResource;
 use App\Filament\Resources\Posts\PostResource;
 use App\Filament\Resources\Programs\ProgramResource;
+use App\Filament\Resources\RecruitmentApplicants\RecruitmentApplicantResource;
+use App\Filament\Resources\Recruitments\RecruitmentResource;
 use App\Filament\Resources\StructureMembers\StructureMemberResource;
 use App\Filament\Resources\StudentActivities\StudentActivityResource;
 use App\Filament\Resources\Users\UserResource;
@@ -47,6 +49,9 @@ use App\Filament\Widgets\MyPostsChart;
 use App\Filament\Widgets\OverdueLpjWidget;
 use App\Filament\Widgets\PostsPublishedChart;
 use App\Filament\Widgets\PostStatusChart;
+use App\Filament\Widgets\RecruitmentByDivisionChart;
+use App\Filament\Widgets\RecruitmentDailyChart;
+use App\Filament\Widgets\RecruitmentStatusChart;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -145,6 +150,9 @@ return [
             StudentActivityResource::class,
             OrganizationResource::class,
             ApplicantAccountResource::class,
+            // Fase 7B: dijaga RecruitmentPolicy / RecruitmentApplicantPolicy + recruitment.manage / recruitment.interview.
+            RecruitmentResource::class,
+            RecruitmentApplicantResource::class,
         ],
     ],
 
@@ -194,6 +202,10 @@ return [
             ActivitiesByOrganizationChart::class,
             MyActivitiesChart::class,
             LpjDeadlineWidget::class,
+            // Widget Fase 7B (oprec).
+            RecruitmentByDivisionChart::class,
+            RecruitmentStatusChart::class,
+            RecruitmentDailyChart::class,
         ],
     ],
 
@@ -234,6 +246,7 @@ return [
         'activity.submit' => 'Ajukan kegiatan',
         'applicant.manage' => 'Kelola akun pengaju & organisasi',
         'recruitment.manage' => 'Kelola oprec',
+        'recruitment.interview' => 'Wawancara & nilai pendaftar oprec (divisinya)',
         'chat.use' => 'Gunakan chat',
         'report.view' => 'Lihat laporan',
     ],

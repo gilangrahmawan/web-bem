@@ -3,6 +3,7 @@
 use App\Http\Controllers\Panel\ActivityFileController;
 use App\Http\Controllers\Panel\AnnouncementAttachmentController;
 use App\Http\Controllers\Panel\PostImageController;
+use App\Http\Controllers\Panel\RecruitmentFileController;
 use App\Http\Controllers\Panel\TaskResultController;
 use App\Http\Controllers\Public\AspirationController;
 use App\Http\Controllers\Public\CalendarController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\NewsController;
 use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\ProgramController;
+use App\Http\Controllers\Public\RecruitmentController;
 use App\Http\Controllers\Public\SeoController;
 use App\Http\Controllers\Public\StudyController;
 use App\Http\Middleware\Authenticate;
@@ -67,15 +69,15 @@ Route::name('public.')->group(function (): void {
     Route::get('/pengajuan', [PageController::class, 'submissions'])->name('submissions.create');
     Route::permanentRedirect('/pengajuan/status', '/pengajuan')->name('submissions.status');
 
-    // Placeholder "segera hadir" — diganti di Fase 7B (oprec).
-    $soon = [
-        'recruitment.create' => ['/oprec', 'Open Recruitment'],
-        'recruitment.results' => ['/oprec/hasil', 'Pengumuman Oprec'],
-    ];
-
-    foreach ($soon as $name => [$uri, $title]) {
-        Route::get($uri, [PageController::class, 'comingSoon'])->defaults('title', $title)->name($name);
-    }
+    // Oprec: daftar (5/IP/jam) & cek hasil (20/IP/jam), keduanya dengan Turnstile.
+    Route::get('/oprec', [RecruitmentController::class, 'create'])->name('recruitment.create');
+    Route::post('/oprec', [RecruitmentController::class, 'store'])
+        ->middleware('throttle:public-submit')
+        ->name('recruitment.store');
+    Route::get('/oprec/hasil', [RecruitmentController::class, 'results'])->name('recruitment.results');
+    Route::post('/oprec/hasil', [RecruitmentController::class, 'check'])
+        ->middleware('throttle:public-status')
+        ->name('recruitment.check');
 });
 
 /*
@@ -96,6 +98,10 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
             ->whereNumber('activity')
             ->whereIn('type', ['proposal', 'lpj'])
             ->name('activities.file');
+        Route::get('/oprec/pendaftar/{applicant}/{type}', RecruitmentFileController::class)
+            ->whereNumber('applicant')
+            ->whereIn('type', ['cv', 'photo'])
+            ->name('recruitment.file');
     });
 
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

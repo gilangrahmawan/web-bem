@@ -28,9 +28,10 @@ it('semua halaman publik dapat dibuka', function (string $url): void {
     'kontak' => '/kontak',
 ]);
 
-it('halaman layanan yang belum dibuat menampilkan "segera hadir"', function (string $url): void {
-    get($url)->assertOk()->assertSee('Segera hadir')->assertSee('noindex', false);
-})->with(['/oprec', '/oprec/hasil']);
+it('halaman oprec dapat dibuka walau belum ada gelombang', function (): void {
+    get('/oprec')->assertOk()->assertSee('Pendaftaran sedang ditutup');
+    get('/oprec/hasil')->assertOk()->assertSee('noindex', false);
+});
 
 it('divisi yang tidak ada menghasilkan 404 bergaya situs', function (): void {
     get('/divisi/tidak-ada')->assertNotFound()->assertSee('Halaman tidak ditemukan');

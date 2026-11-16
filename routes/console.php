@@ -30,3 +30,9 @@ Schedule::command('kas:monthly-recap')
     ->monthlyOn(1, '08:00')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
+
+// Hapus data pribadi pendaftar oprec yang tidak diterima setelah masa simpan (default 6 bulan).
+Schedule::command('recruitment:purge-personal-data')
+    ->dailyAt('02:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
