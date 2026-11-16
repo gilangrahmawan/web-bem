@@ -37,7 +37,6 @@ class DiscussionForm
                         ->helperText($canSetDocs ? null : 'Hanya Koordinator Kajian yang dapat mengisi link Docs.'),
                     WebpImageUpload::make('photo', 'discussions', 1600)
                         ->label('Foto')
-                        ->helperText('JPG/PNG/WebP maksimal 2 MB, otomatis dikompres ke WebP.')
                         ->columnSpanFull(),
                     Repeater::make('reference_links')
                         ->label('Link referensi')

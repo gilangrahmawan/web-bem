@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\Exposed;
 use Filament\Support\Components\Attributes\Unexposed;
@@ -64,7 +65,7 @@ class MyProfile extends Page
                     ->label('Foto profil')
                     ->avatar()
                     ->helperText('Foto ini dapat tampil di halaman publik Struktur Kepengurusan. Gunakan foto formal/rapi. '
-                        .'JPG/PNG/WebP, maksimal 2 MB, otomatis dikompres ke WebP.'),
+                        .'JPG/PNG/WebP; foto besar dari HP otomatis diperkecil sebelum diunggah lalu dikompres ke WebP.'),
                 TextInput::make('phone')
                     ->label('Nomor HP')
                     ->tel()
@@ -137,6 +138,7 @@ class MyProfile extends Page
                                 Actions::make([
                                     Action::make('saveProfile')->label('Simpan profil')->submit('saveProfile'),
                                 ])->key('profile-form-actions'),
+                                View::make('filament.partials.processing-photo')->viewData(['target' => 'saveProfile']),
                             ]),
                     ]),
                 Section::make('Ganti password')

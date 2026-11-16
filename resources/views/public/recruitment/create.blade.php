@@ -3,6 +3,9 @@
     $input = 'mt-1 w-full rounded-xl border-slate-300 px-4 py-2.5 ring-1 ring-slate-300 focus:ring-2 focus:ring-brand-primary';
 @endphp
 <x-layouts.public title="Open Recruitment" description="Pendaftaran pengurus BEM UBHINUS: divisi yang dibuka, syarat berkas, dan formulir pendaftaran online.">
+    <x-slot:head>
+        @vite('resources/js/public-image-resize.js')
+    </x-slot:head>
     <x-public.page-header eyebrow="Layanan Mahasiswa" title="Open Recruitment"
         subtitle="Bergabung menjadi pengurus BEM Universitas Bhinneka Nusantara." />
 
@@ -32,7 +35,7 @@
                     @endif
                 </div>
 
-                <form method="POST" action="{{ route('public.recruitment.store') }}" enctype="multipart/form-data"
+                <form method="POST" action="{{ route('public.recruitment.store') }}" enctype="multipart/form-data" data-processing-form
                     class="space-y-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
                     @csrf
 
@@ -109,12 +112,16 @@
                         <legend class="mb-2 text-lg font-extrabold text-brand-primary">Berkas</legend>
                         <div>
                             <label for="cv" class="block text-sm font-semibold text-slate-800">CV <span class="font-normal text-slate-500">(PDF, maks. 2 MB)</span></label>
-                            <input id="cv" name="cv" type="file" required accept="application/pdf,.pdf" class="mt-1 block w-full text-sm">
+                            <input id="cv" name="cv" type="file" required accept="application/pdf,.pdf" class="mt-1 block w-full text-sm"
+                                data-max-kb="2048" data-status="#cv-status">
+                            <p id="cv-status" class="mt-1 hidden text-sm text-slate-600" aria-live="polite"></p>
                             @error('cv') <p class="mt-1 text-sm text-red-700">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label for="photo" class="block text-sm font-semibold text-slate-800">Foto diri <span class="font-normal text-slate-500">(JPG/PNG/WebP, maks. 2 MB)</span></label>
-                            <input id="photo" name="photo" type="file" required accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full text-sm">
+                            <label for="photo" class="block text-sm font-semibold text-slate-800">Foto diri <span class="font-normal text-slate-500">(JPG/PNG/WebP — foto besar dari HP otomatis diperkecil)</span></label>
+                            <input id="photo" name="photo" type="file" required accept="image/jpeg,image/png,image/webp" class="mt-1 block w-full text-sm"
+                                data-resize-image="1600" data-status="#photo-status">
+                            <p id="photo-status" class="mt-1 hidden text-sm text-slate-600" aria-live="polite"></p>
                             @error('photo') <p class="mt-1 text-sm text-red-700">{{ $message }}</p> @enderror
                         </div>
                     </fieldset>
@@ -136,6 +143,9 @@
                         class="w-full rounded-xl bg-brand-primary px-6 py-3 font-bold text-white hover:bg-brand-secondary disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
                         Kirim pendaftaran
                     </button>
+                    <p data-processing-message role="status" class="hidden text-sm font-semibold text-slate-600">
+                        Sedang mengunggah dan memproses berkas… mohon tunggu, jangan tutup halaman ini.
+                    </p>
                 </form>
             @endif
         </section>

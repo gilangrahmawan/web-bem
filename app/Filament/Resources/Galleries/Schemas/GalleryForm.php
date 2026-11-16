@@ -54,17 +54,14 @@ class GalleryForm
                     ->description('Pilih atau seret beberapa foto sekaligus. Foto dikompres ke WebP dan dibuatkan thumbnail.')
                     ->columnSpanFull()
                     ->schema([
-                        FileUpload::make('new_photos')
+                        WebpImageUpload::resizeInBrowser(FileUpload::make('new_photos'))
                             ->label('Foto baru')
                             ->multiple()
-                            ->image()
                             ->maxFiles(30)
-                            ->maxSize(2048)
-                            ->acceptedFileTypes(WebpImageUpload::MIME_TYPES)
-                            ->rules([WebpImageUpload::MIMES])
+                            ->maxParallelUploads(2)
                             ->storeFiles(false)
                             ->panelLayout('grid')
-                            ->helperText('JPG/PNG/WebP, maksimal 2 MB per foto, hingga 30 foto per simpan.'),
+                            ->helperText('JPG/PNG/WebP, hingga 30 foto per simpan. Foto besar otomatis diperkecil di browser sebelum diunggah.'),
                     ]),
 
                 Section::make('Foto di album')

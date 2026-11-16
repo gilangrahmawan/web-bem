@@ -22,7 +22,8 @@ class ImageService
 
     public function __construct()
     {
-        $this->manager = new ImageManager(new Driver);
+        // autoOrientation dimatikan: orientasi EXIF diterapkan SETELAH resize (lihat readScaled()).
+        $this->manager = new ImageManager(new Driver, autoOrientation: false);
     }
 
     /**
@@ -37,12 +38,12 @@ class ImageService
         string $disk = 'public',
         ?string $name = null,
     ): string {
-        $image = $this->read($source);
-        $image->scaleDown($maxSize, $maxSize);
+        $image = $this->readScaled($source, $maxSize);
 
         $path = trim($directory, '/').'/'.($name ?? Str::uuid()->toString()).'.webp';
 
         Storage::disk($disk)->put($path, (string) $image->encode(new WebpEncoder(self::QUALITY)));
+        unset($image);
 
         return $path;
     }
@@ -67,7 +68,7 @@ class ImageService
 
         // Decode sekali saja (hemat memori di shared hosting): versi besar dulu,
         // lalu thumbnail dibuat dari versi besar yang sudah diperkecil.
-        $image = $this->read($source)->scaleDown($maxSize, $maxSize);
+        $image = $this->readScaled($source, $maxSize);
         Storage::disk($disk)->put($path, (string) $image->encode(new WebpEncoder(self::QUALITY)));
 
         $image->coverDown($thumbWidth, $thumbHeight);
@@ -92,13 +93,16 @@ class ImageService
         return $this->manager;
     }
 
-    private function read(UploadedFile|string $source): ImageInterface
+    /**
+     * Decode SEKALI → perkecil (sisi terpanjang ≤ $maxSize) → baru putar sesuai EXIF.
+     * Urutan ini penting di memory_limit 128M: memutar bitmap 4000px penuh (imagerotate) butuh salinan
+     * kedua (+~96 MB) dan membuat foto portrait HP crash; memutar hasil 1600px hanya ±15 MB.
+     * Batas kotak $maxSize×$maxSize simetris, jadi hasil akhir sama dengan orient-lalu-resize.
+     */
+    private function readScaled(UploadedFile|string $source, int $maxSize): ImageInterface
     {
-        $image = $source instanceof UploadedFile
-            ? $this->manager->decodePath($source->getRealPath())
-            : $this->manager->decodePath($source);
+        $image = $this->manager->decodePath($source instanceof UploadedFile ? $source->getRealPath() : $source);
 
-        // Putar sesuai EXIF (foto HP) sebelum diproses.
-        return $image->orient();
+        return $image->scaleDown($maxSize, $maxSize)->orient();
     }
 }

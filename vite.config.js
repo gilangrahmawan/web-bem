@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/public-calendar.js',
                 'resources/js/panel-calendar.js',
+                'resources/js/public-image-resize.js',
             ],
             refresh: true,
             // Font diunduh saat build lalu disajikan dari server sendiri (tanpa request ke pihak ketiga).

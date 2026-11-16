@@ -4,7 +4,10 @@ use App\Enums\RoleName;
 use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Galleries\Pages\CreateGallery;
 use App\Filament\Resources\Galleries\Pages\EditGallery;
+use App\Filament\Support\PostCoverUpload;
+use App\Filament\Support\WebpImageUpload;
 use App\Models\Gallery;
+use App\Models\Recruitment;
 use App\Services\ImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -98,4 +101,47 @@ it('menghapus album ikut menghapus berkas fotonya', function (): void {
     $gallery->delete();
 
     Storage::disk('public')->assertMissing([$photo->path, $photo->thumb_path]);
+});
+
+it('foto HP portrait (EXIF rotate) diperkecil dulu baru diputar: hasil tegak', function (): void {
+    // JPEG lanskap 2400x1600 + APP1 EXIF Orientation=6 (kamera HP dipegang tegak).
+    $im = imagecreatetruecolor(2400, 1600);
+    ob_start();
+    imagejpeg($im, null, 80);
+    $jpg = ob_get_clean();
+    $tiff = "II*\x00".pack('V', 8).pack('v', 1).pack('vvVvv', 0x0112, 3, 1, 6, 0).pack('V', 0);
+    $app1 = "\xFF\xE1".pack('n', strlen("Exif\x00\x00".$tiff) + 2)."Exif\x00\x00".$tiff;
+    $path = tempnam(sys_get_temp_dir(), 'exif');
+    file_put_contents($path, substr($jpg, 0, 2).$app1.substr($jpg, 2));
+
+    $stored = app(ImageService::class)->storeWebp($path, 'tes', 600);
+    @unlink($path);
+
+    [$width, $height] = getimagesizefromstring(Storage::disk('public')->get($stored));
+    expect([$width, $height])->toBe([400, 600]);
+});
+
+it('upload foto terkompres diperkecil di browser; cover Medpub tidak', function (): void {
+    $photo = WebpImageUpload::make('photo', 'users', 600);
+    $hero = WebpImageUpload::make('hero_image', 'site', 1920);
+    $cover = PostCoverUpload::make();
+
+    expect($photo->getAutomaticallyResizeImagesWidth())->toBe('1600')
+        ->and($photo->getAutomaticallyResizeImagesHeight())->toBe('1600')
+        ->and($photo->getAutomaticallyResizeImagesMode())->toBe('contain')
+        ->and($photo->shouldAutomaticallyUpscaleImagesWhenResizing())->toBeFalse()
+        ->and($photo->getMaxSize())->toBe(12288)
+        ->and($photo->getUploadingMessage())->toContain('Memperkecil')
+        ->and($hero->getAutomaticallyResizeImagesWidth())->toBe('1920')
+        ->and($cover->getAutomaticallyResizeImagesWidth())->toBeNull()
+        ->and($cover->getAutomaticallyResizeImagesHeight())->toBeNull();
+});
+
+it('form oprec publik memperkecil foto di browser sebelum dikirim', function (): void {
+    Recruitment::factory()->create();
+    config(['services.turnstile.site_key' => '1x00000000000000000000AA']);
+
+    Pest\Laravel\get('/oprec')->assertOk()
+        ->assertSee('data-resize-image="1600"', false)
+        ->assertSee('data-processing-form', false);
 });
