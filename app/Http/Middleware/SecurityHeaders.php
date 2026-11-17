@@ -50,7 +50,9 @@ class SecurityHeaders
             "img-src 'self' data: blob:",
             // Chat real-time: Pusher Channels (WebSocket + fallback HTTP) — Fase 9.
             "connect-src 'self' wss://*.pusher.com https://*.pusher.com".$vite,
-            "worker-src 'self'",
+            // FilePond (upload foto Filament) membuat Web Worker dari blob: untuk memperkecil gambar di browser.
+            // Hanya worker yang diizinkan dari blob:, script-src TIDAK dilonggarkan.
+            "worker-src 'self' blob:",
             "manifest-src 'self'",
             // 'self': pratinjau PDF Drive (iframe same-origin); peta Google Maps (Kontak); Turnstile.
             "frame-src 'self' https://www.google.com https://challenges.cloudflare.com",

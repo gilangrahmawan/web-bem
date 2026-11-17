@@ -47,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ], isRequired: true)
             ->multiFactorAuthenticationRequiredMiddlewareName(RequireTwoFactorForPrivilegedRoles::class)
             ->brandName('BEM UBHINUS')
+            ->favicon(fn (): string => asset('favicon.ico'))
             ->colors([
                 'primary' => Color::hex('#232361'),
             ])

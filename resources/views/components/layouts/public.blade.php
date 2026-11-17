@@ -42,6 +42,7 @@
     {{ $head ?? '' }}
 
     <meta name="theme-color" content="#232361">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
 

@@ -10,7 +10,7 @@
             ios: /iphone|ipad|ipod/i.test(navigator.userAgent),
             async init() {
                 if (! this.supported) { return }
-                const reg = await navigator.serviceWorker.getRegistration('/panel-bem/')
+                const reg = await navigator.serviceWorker.getRegistration('/panel-bem')
                 const sub = reg ? await reg.pushManager.getSubscription() : null
                 this.subscribed = Boolean(sub)
             },
@@ -24,7 +24,7 @@
                 try {
                     this.permission = await Notification.requestPermission()
                     if (this.permission !== 'granted') { this.message = 'Izin notifikasi ditolak. Ubah di pengaturan situs browser.'; return }
-                    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/panel-bem/' })
+                    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/panel-bem' })
                     await navigator.serviceWorker.ready
                     const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.key(@js($vapidPublicKey)) })
                     const res = await fetch(@js(route('panel.push.subscribe')), {
@@ -43,7 +43,7 @@
             async disable() {
                 this.busy = true
                 try {
-                    const reg = await navigator.serviceWorker.getRegistration('/panel-bem/')
+                    const reg = await navigator.serviceWorker.getRegistration('/panel-bem')
                     const sub = reg ? await reg.pushManager.getSubscription() : null
                     if (sub) {
                         await fetch(@js(route('panel.push.unsubscribe')), {

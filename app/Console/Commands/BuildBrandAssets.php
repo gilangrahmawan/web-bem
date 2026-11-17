@@ -67,8 +67,38 @@ class BuildBrandAssets extends Command
                 ->encode(new PngEncoder)->save($target."/icon-maskable-{$size}.png");
         }
 
-        $this->info('Aset logo dibuat di public/images dan public/favicon.png (termasuk ikon PWA).');
+        // favicon.ico (16/32/48 px, isi PNG) — browser selalu meminta /favicon.ico.
+        $sizes = [16, 32, 48];
+        $pngs = array_map(
+            fn (int $size): string => (string) $manager->decodePath($bem)->contain($size, $size, 'ffffff00')->encode(new PngEncoder),
+            $sizes,
+        );
+        file_put_contents(public_path('favicon.ico'), self::icoFromPngs($sizes, $pngs));
+
+        $this->info('Aset logo dibuat di public/images, public/favicon.png, public/favicon.ico (termasuk ikon PWA).');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Wadah ICO berisi gambar PNG (didukung semua browser modern & Windows Vista+).
+     *
+     * @param  list<int>  $sizes
+     * @param  list<string>  $pngs
+     */
+    public static function icoFromPngs(array $sizes, array $pngs): string
+    {
+        $count = count($pngs);
+        $header = pack('vvv', 0, 1, $count);
+        $directory = '';
+        $offset = 6 + 16 * $count;
+
+        foreach ($pngs as $i => $png) {
+            $size = $sizes[$i] >= 256 ? 0 : $sizes[$i];
+            $directory .= pack('CCCCvvVV', $size, $size, 0, 0, 1, 32, strlen($png), $offset);
+            $offset += strlen($png);
+        }
+
+        return $header.$directory.implode('', $pngs);
     }
 }

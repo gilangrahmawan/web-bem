@@ -4,7 +4,7 @@
     "description": "Dashboard pengurus Badan Eksekutif Mahasiswa Universitas Bhinneka Nusantara.",
     "lang": "id",
     "start_url": "/panel-bem",
-    "scope": "/panel-bem/",
+    "scope": "/panel-bem",
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#ffffff",

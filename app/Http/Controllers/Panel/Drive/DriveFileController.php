@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Panel\Drive;
 
+use App\Enums\DriveFileKind;
 use App\Http\Controllers\Controller;
 use App\Models\DriveFile;
 use App\Models\User;
@@ -46,7 +47,10 @@ class DriveFileController extends Controller
                 preg_replace('/[^A-Za-z0-9._-]+/', '_', Str::ascii($record->original_name)) ?: 'berkas',
             ),
             'X-Content-Type-Options' => 'nosniff',
-            'Content-Security-Policy' => "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; object-src 'self'; frame-ancestors 'self'",
+            // Gambar: sandbox penuh. PDF: tanpa "sandbox" karena viewer PDF Chrome/Edge menolak berjalan di
+            // dokumen ber-sandbox; isolasi tetap lewat default-src 'none' + MIME terverifikasi + nosniff.
+            'Content-Security-Policy' => ($record->kind === DriveFileKind::Pdf ? '' : 'sandbox; ')
+                ."default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; object-src 'self'; frame-ancestors 'self'",
             'Cache-Control' => 'private, max-age=300',
         ]);
     }

@@ -21,7 +21,7 @@ function dispatch(name, detail) {
 // ---------------------------------------------------------------- service worker (PWA)
 if ('serviceWorker' in navigator && config.userId) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/panel-bem/' }).catch(() => {});
+        navigator.serviceWorker.register('/sw.js', { scope: '/panel-bem' }).catch(() => {});
     });
 }
 

@@ -4,7 +4,7 @@
  *   TIDAK PERNAH di-cache; bila offline, navigasi panel menampilkan /offline.html.
  * - Web Push: menampilkan notifikasi & membuka URL tujuan saat diklik.
  */
-const VERSION = 'bem-v1';
+const VERSION = 'bem-v2';
 const STATIC_CACHE = `${VERSION}-static`;
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/images/icon-192.png', '/images/icon-maskable-192.png', '/favicon.png'];
