@@ -23,6 +23,7 @@ use App\Filament\Resources\Divisions\DivisionResource;
 use App\Filament\Resources\DocumentTemplates\DocumentTemplateResource;
 use App\Filament\Resources\Downloads\DownloadResource;
 use App\Filament\Resources\Dues\DueResource;
+use App\Filament\Resources\Forms\FormResource;
 use App\Filament\Resources\Galleries\GalleryResource;
 use App\Filament\Resources\Letters\LetterResource;
 use App\Filament\Resources\Organizations\OrganizationResource;
@@ -47,6 +48,8 @@ use App\Filament\Widgets\DriveActivityWidget;
 use App\Filament\Widgets\DriveFileTypesChart;
 use App\Filament\Widgets\DriveStorageWidget;
 use App\Filament\Widgets\DuesProgressChart;
+use App\Filament\Widgets\FormResponsesDailyChart;
+use App\Filament\Widgets\FormStatusChart;
 use App\Filament\Widgets\InboxStatsWidget;
 use App\Filament\Widgets\KasArrearsByDivisionChart;
 use App\Filament\Widgets\KasStatsOverview;
@@ -167,6 +170,8 @@ return [
             RecruitmentApplicantResource::class,
             // Fase 8: dijaga DocumentTemplatePolicy (folder.manage).
             DocumentTemplateResource::class,
+            // Fase 11A: dijaga FormPolicy + permission kustom form.manage.
+            FormResource::class,
         ],
     ],
 
@@ -233,6 +238,9 @@ return [
             ChatStatsWidget::class,
             ChatActivityChart::class,
             PushAdoptionChart::class,
+            // Widget Fase 11A (form): hak akses diatur canView().
+            FormResponsesDailyChart::class,
+            FormStatusChart::class,
         ],
     ],
 
@@ -274,6 +282,7 @@ return [
         'applicant.manage' => 'Kelola akun pengaju & organisasi',
         'recruitment.manage' => 'Kelola oprec',
         'recruitment.interview' => 'Wawancara & nilai pendaftar oprec (divisinya)',
+        'form.manage' => 'Kelola form & survei (koordinator: divisinya)',
         'chat.use' => 'Gunakan chat',
         'report.view' => 'Lihat laporan',
     ],

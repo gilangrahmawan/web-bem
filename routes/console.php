@@ -38,6 +38,12 @@ Schedule::command('recruitment:purge-personal-data')
     ->withoutOverlapping();
 
 // Hapus permanen isi Sampah Drive yang lebih dari 30 hari.
+// Form (Fase 11A): hapus jawaban sesuai masa simpan per form + draf jawaban terbengkalai.
+Schedule::command('forms:purge-responses')
+    ->dailyAt('02:45')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
 Schedule::command('drive:purge-trash')
     ->dailyAt('02:30')
     ->timezone('Asia/Jakarta')

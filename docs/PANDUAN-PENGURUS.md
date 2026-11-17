@@ -99,6 +99,14 @@ Isi chat personal **tidak bisa dibaca** siapa pun selain anggota percakapan, ter
 - **Chat**: personal dengan pengurus/pengaju lain dan grup organisasi otomatis.
 - **Kotak Masuk** (pesan untuk organisasi Anda), **Kalender** publik, **Profil Saya**, **Notifikasi**.
 
+### Form & Survei (Super Admin, Sekretaris, koordinator divisi)
+- Menu *Komunikasi → Form & Survei*. Koordinator hanya melihat & mengelola form divisinya; Pembina hanya melihat.
+- **Buat form** → tab *Pertanyaan*: ketik pertanyaan, pilih jenis (13 jenis, termasuk upload berkas), seret ⠿ untuk mengurutkan, tombol samping/bawah untuk menambah pertanyaan, judul, atau bagian. Semua perubahan tersimpan otomatis.
+- **Kuis**: aktifkan di *Pengaturan*, lalu beri poin & tandai jawaban benar. Esai/upload dinilai manual di tab *Jawaban* (tombol *Lihat* → *Beri nilai*).
+- **Pratinjau** untuk mencoba tanpa menyimpan jawaban; **Terbitkan** agar link aktif; bagikan lewat **Salin link** atau **Unduh QR (PNG)**; **Tutup form** bila selesai.
+- Tab *Jawaban*: ringkasan, daftar responden, **Export Excel/CSV**. Jawaban yang sudah dikirim tidak bisa diubah peserta.
+- Jawaban dihapus otomatis **12 bulan setelah form ditutup** (bisa diubah per form, termasuk *Simpan selamanya*). Form yang sudah berjawaban tidak bisa dihapus.
+
 ---
 
 ## 6. Pertanyaan umum

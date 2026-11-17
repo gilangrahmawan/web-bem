@@ -52,7 +52,7 @@ class RolePermissionSeeder extends Seeder
             RoleName::Sekretaris->value => [
                 'announcement.create', 'folder.manage', 'download.manage', 'aspiration.view',
                 'activity.submit', 'applicant.manage',
-                'submission.verify', 'recruitment.manage',
+                'submission.verify', 'recruitment.manage', 'form.manage',
                 'event.create_public', 'event.create_ukm', 'event.create_meeting',
                 'chat.use',
                 ...self::MANAGE_DOWNLOADS,
@@ -63,7 +63,7 @@ class RolePermissionSeeder extends Seeder
             ],
             RoleName::KoordinatorKajian->value => [
                 'discussion.create', 'discussion.set_docs_link', 'discussion.manage_all', 'post.create_study',
-                'aspiration.study', 'event.create_meeting', 'activity.submit', 'recruitment.interview',
+                'aspiration.study', 'event.create_meeting', 'activity.submit', 'recruitment.interview', 'form.manage',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
             ],
@@ -73,7 +73,7 @@ class RolePermissionSeeder extends Seeder
             ],
             RoleName::KoordinatorMedpub->value => [
                 'post.create', 'post.create_press_release', 'post.approve_coordinator', 'post.publish',
-                'event.assign_task', 'event.create_meeting', 'activity.submit', 'recruitment.interview',
+                'event.assign_task', 'event.create_meeting', 'activity.submit', 'recruitment.interview', 'form.manage',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
                 ...self::MANAGE_GALLERIES,
@@ -84,7 +84,7 @@ class RolePermissionSeeder extends Seeder
             ],
             RoleName::KoordinatorHumas->value => [
                 'post.create_press_release', 'aspiration.handle', 'aspiration.escalate',
-                'letter.create', 'event.create_ukm', 'event.create_meeting', 'activity.submit', 'recruitment.interview',
+                'letter.create', 'event.create_ukm', 'event.create_meeting', 'activity.submit', 'recruitment.interview', 'form.manage',
                 'chat.use',
                 ...self::MANAGE_PROGRAMS,
             ],

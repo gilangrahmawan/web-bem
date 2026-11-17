@@ -7,6 +7,7 @@ use App\Http\Controllers\Panel\ChatAttachmentController;
 use App\Http\Controllers\Panel\Drive\DocumentExportController;
 use App\Http\Controllers\Panel\Drive\DriveFileController;
 use App\Http\Controllers\Panel\Drive\DriveFolderZipController;
+use App\Http\Controllers\Panel\Forms\FormPanelController;
 use App\Http\Controllers\Panel\PostImageController;
 use App\Http\Controllers\Panel\PushSubscriptionController;
 use App\Http\Controllers\Panel\RecruitmentFileController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Public\AspirationController;
 use App\Http\Controllers\Public\CalendarController;
 use App\Http\Controllers\Public\DivisionController;
 use App\Http\Controllers\Public\DownloadController;
+use App\Http\Controllers\Public\FormController;
 use App\Http\Controllers\Public\GalleryController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\NewsController;
@@ -85,6 +87,12 @@ Route::name('public.')->group(function (): void {
     Route::post('/oprec/hasil', [RecruitmentController::class, 'check'])
         ->middleware('throttle:public-status')
         ->name('recruitment.check');
+
+    // Mesin form (Fase 11A): URL acak, tanpa daftar form publik. Rate limit kirim ada di komponen.
+    Route::get('/form/{publicId}', [FormController::class, 'show'])
+        ->where('publicId', '[A-Za-z0-9]{6,16}')
+        ->middleware('throttle:120,1')
+        ->name('forms.show');
 });
 
 /*
@@ -129,6 +137,16 @@ Route::middleware([SetUpPanel::class.':admin', Authenticate::class, EnsurePasswo
             ->middleware('throttle:20,1')->name('push.subscribe');
         Route::delete('/push/langganan', [PushSubscriptionController::class, 'destroy'])
             ->middleware('throttle:20,1')->name('push.unsubscribe');
+
+        // Form (Fase 11A): pratinjau tanpa menyimpan respons, QR, export, berkas jawaban. Tidak berhak → 404.
+        Route::get('/form/{form}/pratinjau', [FormPanelController::class, 'preview'])
+            ->whereNumber('form')->name('forms.preview');
+        Route::get('/form/{form}/qr', [FormPanelController::class, 'qr'])
+            ->whereNumber('form')->middleware('throttle:30,1')->name('forms.qr');
+        Route::get('/form/{form}/export/{format}', [FormPanelController::class, 'export'])
+            ->whereNumber('form')->whereIn('format', ['csv', 'xlsx'])->middleware('throttle:20,1')->name('forms.export');
+        Route::get('/form/jawaban/{answer}/berkas/{index}', [FormPanelController::class, 'answerFile'])
+            ->whereNumber('answer')->whereNumber('index')->middleware('throttle:120,1')->name('forms.answer-file');
 
         // Backup (Fase 10): khusus Super Admin.
         Route::get('/backup/unduh', BackupDownloadController::class)

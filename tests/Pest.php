@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\FormPurpose;
 use App\Enums\RoleName;
 use App\Models\Division;
+use App\Models\Form;
+use App\Models\FormQuestion;
 use App\Models\Organization;
 use App\Models\Period;
 use App\Models\Setting;
@@ -126,4 +129,47 @@ function fakeTurnstile(bool $success = true): void
     Http::fake([
         'challenges.cloudflare.com/*' => Http::response(['success' => $success]),
     ]);
+}
+
+/**
+ * Form uji (Fase 11A) berisi pertanyaan $questions (atribut FormQuestion; minimal 'type').
+ * $state: draft | published | closed.
+ */
+function formWith(array $questions = [], array $attributes = [], array $settings = [], string $state = 'published', ?FormPurpose $purpose = null): Form
+{
+    $factory = Form::factory()->settings($settings);
+    $factory = match ($state) {
+        'published' => $factory->published(),
+        'closed' => $factory->closed(),
+        default => $factory,
+    };
+
+    $form = $factory->create($attributes);
+
+    if ($purpose) {
+        $form->forceFill(['purpose' => $purpose])->save();
+    }
+
+    $section = $form->sections()->first();
+
+    foreach (array_values($questions) as $i => $question) {
+        $form->questions()->create([
+            'form_section_id' => $section->getKey(),
+            'position' => $i,
+            'label' => 'Pertanyaan '.($i + 1),
+            'is_required' => false,
+            'options' => [],
+            'validation' => [],
+            'points' => 0,
+            ...$question,
+        ]);
+    }
+
+    return $form->refresh();
+}
+
+/** Pertanyaan ke-$index (urut posisi) dari form. */
+function formQuestion(Form $form, int $index = 0): FormQuestion
+{
+    return $form->questions()->get()[$index];
 }

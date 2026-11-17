@@ -40,11 +40,11 @@ Urutan pengerjaan: **11A → 11C → 11B**, masing-masing dengan rencana dan per
 
 | Tabel | Kolom penting |
 |---|---|
-| `forms` | owner_type, owner_id (polimorfik: acara, hari acara, gelombang oprec, …), purpose (registration / exit_ticket / exam / pretest / posttest / survey), title, description, is_quiz, settings (JSON: acak soal, acak pilihan, batas waktu menit, nilai lulus, tampilkan nilai: never/after_submit/after_grading, satu kali isi, butuh login/tidak), opens_at, closes_at, status (draft/published/closed), created_by |
+| `forms` | owner_type, owner_id (polimorfik: acara, hari acara, gelombang oprec, …), division_id (nullable, keputusan A6 #1), public_id (acak), purpose (registration / exit_ticket / exam / pretest / posttest / survey), title, description, is_quiz, settings (JSON: acak soal, acak pilihan, batas waktu menit, nilai lulus, tampilkan nilai: never/after_submit/after_grading, satu kali isi, butuh login/tidak), opens_at, closes_at, status (draft/published/closed), created_by |
 | `form_sections` | form_id, title, description, position |
 | `form_questions` | form_id, section_id, type, label, help_text, is_required, position, options (JSON), validation (JSON), points (untuk kuis), correct_answer (JSON, tersimpan aman, tidak pernah dikirim ke browser peserta) |
-| `form_responses` | form_id, respondent_type, respondent_id (peserta acara / pendaftar oprec / user), started_at, submitted_at, expires_at (ujian berbatas waktu), score, max_score, graded_at, graded_by, question_order (JSON, urutan acak per peserta) — IP tidak disimpan |
-| `form_answers` | response_id, question_id, value (JSON), file_path (privat), points_awarded, grader_note (internal) |
+| `form_responses` | form_id, respondent_type, respondent_id (peserta acara / pendaftar oprec / user), resume_token (hash), respondent_email, tab_switches, started_at, submitted_at, expires_at (ujian berbatas waktu), score, max_score, graded_at, graded_by, question_order (JSON, urutan acak per peserta) — IP tidak disimpan |
+| `form_answers` | response_id, question_id, value (JSON), files (JSON: path, nama asli, MIME, ukuran — disk privat, maks. 3), points_awarded, grader_note (internal) |
 
 ### A2. Jenis pertanyaan
 
@@ -88,6 +88,24 @@ Tata letak mirip Google Form, satu kolom di tengah (maks ±760 px), warna brand:
 - Turnstile sebelum tombol **Kirim** untuk form publik — **kecuali exit ticket** (amandemen #4).
 - Setelah kirim: halaman konfirmasi dengan ikon centang, pesan, dan tindakan berikutnya (mis. e-tiket / link ujian).
 - Mobile-first, mudah dipakai satu tangan, kontras ≥ 4,5:1, ukuran sentuh ≥ 44 px, fokus keyboard terlihat.
+
+### A6. Keputusan pemilik saat implementasi 11A (selesai)
+
+| # | Topik | Keputusan |
+|---|---|---|
+| 1 | Hak kelola (`form.manage`) | Super Admin, Sekretaris, dan koordinator divisi. Kolom `forms.division_id` (nullable = BEM umum). Koordinator hanya melihat/mengelola form divisinya (form baru otomatis milik divisinya); Super Admin & Sekretaris melihat semua; Pembina hanya lihat (tanpa ubah, export, atau menilai); anggota divisi, Bendahara, dan pengaju tidak punya akses. Form berjawaban tidak bisa dihapus, juga oleh Super Admin. |
+| 2 | URL | `/form/{public_id}` acak 10 karakter (tanpa 0/O/1/I), tanpa daftar form publik, halaman `noindex`. Pembuat form punya tombol **Salin link** dan **Unduh QR (PNG)**. |
+| 3 | Satu kali isi tanpa login | Cookie per form + email unik bila form punya pertanyaan email wajib. |
+| 4 | Wajib login | Hanya pengurus BEM aktif (bukan pengaju, bukan Pembina). Tamu diarahkan ke halaman masuk; satu kali isi dicek per akun; tanpa Turnstile. |
+| 5 | Retensi | Per form, bawaan **12 bulan setelah ditutup** (tanggal tutup manual, atau `closes_at` bila lewat), opsi **simpan selamanya**. Dijalankan `forms:purge-responses` harian 02:45 WIB lewat scheduler yang ada; draf jawaban yang tidak pernah dikirim dibuang setelah 30 hari. |
+| 6 | Nilai parsial kotak centang | (benar dipilih − salah dipilih) ÷ jumlah jawaban benar × poin, minimal 0. |
+| 7 | Upload | Maks. **3 berkas** per pertanyaan; jenis gambar, PDF, Word, Excel, PowerPoint (pembuat bisa mempersempit). **ZIP tidak diizinkan.** Gambar ≤2 MB → WebP privat (diperkecil dulu di browser), dokumen ≤10 MB disimpan asli di disk privat; validasi ekstensi + MIME hasil deteksi isi. Unduh lewat controller berotorisasi (404 bila tidak berhak). |
+| 8 | Setelah kirim | Jawaban **terkunci** (tidak bisa diubah). |
+| 9 | Pratinjau | Memakai komponen yang sama dengan halaman publik, memvalidasi semua jawaban, tetapi **tidak pernah membuat `form_responses`** atau menyimpan berkas. |
+| 10 | CSP | Halaman `/form` berjalan di bawah CSP global yang sudah ada (Livewire/Alpine, Turnstile dimuat eksplisit dari `challenges.cloudflare.com`) — **tidak ada perubahan CSP**; test memastikan header CSP & Permissions-Policy halaman lain sama dengan sebelumnya. |
+| 11 | Rate limit | Kirim 5/IP/jam (form publik), simpan otomatis 120/IP/menit; halaman form 120 permintaan/IP/menit. |
+
+Catatan implementasi: pola validasi teks dipilih dari daftar aman (NIM, hanya angka, hanya huruf), bukan regex bebas. Perpindahan tab peserta kuis dicatat (`tab_switches`) sebagai informasi bagi penilai, bukan diskualifikasi otomatis. Ringkasan jawaban di panel memakai grafik batang horizontal per opsi/skala dan daftar jawaban terbaru untuk teks.
 
 ---
 
