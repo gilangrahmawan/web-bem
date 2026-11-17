@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ConfigureRequestUrls;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     // POST /broadcasting/auth (middleware web: sesi + CSRF); aturan per channel di routes/channels.php.
     ->withBroadcasting(__DIR__.'/../routes/channels.php')
     ->withMiddleware(function (Middleware $middleware): void {
+        // URL absolut: lokal mengikuti host yang diakses (uji dari HP), produksi dikunci ke APP_URL + HTTPS.
+        $middleware->prepend(ConfigureRequestUrls::class);
         $middleware->append(SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

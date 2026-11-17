@@ -56,3 +56,19 @@ Sekali jalan saja (Git Bash): `OPENSSL_CONF="C:/Users/<nama>/.config/herd/bin/ph
 - Data pribadi pendaftar oprec yang tidak diterima dihapus otomatis setelah `recruitment_retention_months` (6 bulan sejak gelombang ditutup).
 - Sampah Drive dihapus permanen setelah `drive_trash_days` (30 hari).
 - Backup otomatis (Fase 10): database harian & berkas mingguan ke `storage/backups` (ZIP AES-256), siap Cloudflare R2 lewat `BACKUP_DISK=r2`. Selama belum R2, unduh backup terbaru tiap bulan ke tempat lain (pengingat otomatis tanggal 1). Lihat DEPLOY.md bagian 12.
+
+## 6. Uji dari HP di jaringan yang sama (lokal)
+
+Di `APP_ENV=local`, semua URL (CSS/JS Vite, aset Filament, Livewire termasuk upload, foto di disk `public`, manifest PWA, service worker, `/broadcasting/auth`) **mengikuti alamat yang sedang dibuka**, bukan `APP_URL` (middleware `ConfigureRequestUrls`). Di `APP_ENV=production` semua URL tetap dikunci ke `APP_URL` + HTTPS.
+
+1. Laptop dan HP tersambung ke **Wi-Fi yang sama**.
+2. Cari IP laptop: `ipconfig` → baris *IPv4 Address* adaptor Wi-Fi (mis. `192.168.1.20`).
+3. Build aset: `npm run build`. Bila `npm run dev` sedang berjalan, CSS/JS dari server Vite dev otomatis diabaikan saat dibuka lewat IP (memakai hasil build), jadi pastikan build terbaru ada.
+4. Jalankan server yang bisa diakses jaringan: `php artisan serve --host=0.0.0.0 --port=8000`.
+5. Izinkan port di Windows Firewall bila HP tidak bisa membuka: *Windows Defender Firewall → Advanced settings → Inbound Rules → New Rule → Port → TCP 8000 → Allow → Private*. Hapus aturan ini setelah selesai uji.
+6. Di HP buka `http://192.168.1.20:8000` (publik) atau `http://192.168.1.20:8000/panel-bem` (dashboard).
+
+Batasan alamat IP + HTTP:
+- **Push notification, pemasangan PWA, dan service worker hanya berjalan di HTTPS** (browser menganggap `http://IP` tidak aman; `localhost` dikecualikan). Untuk menguji fitur ini dari HP, pakai alamat HTTPS sementara, mis. `herd share` (Herd) atau Cloudflare Tunnel, lalu buka alamat `https://…` yang diberikan.
+- Kamera/upload foto, chat (Pusher), Turnstile uji, dan fitur lain tetap bisa diuji lewat `http://IP:8000`.
+- Setelah selesai, hentikan server `--host=0.0.0.0` agar dashboard lokal tidak terbuka untuk perangkat lain di jaringan.
