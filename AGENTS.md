@@ -8,7 +8,7 @@ Daftar isi
 - BAGIAN C — Spesifikasi produk
 - BAGIAN D — Hak akses (RBAC)
 - BAGIAN E — Database
-- BAGIAN F — Fase pengerjaan (Fase 0 – Fase 10)
+- BAGIAN F — Fase pengerjaan (Fase 0 – Fase 11)
 - BAGIAN G — Checklist selesai tugas
 - BAGIAN H — Pemecahan masalah
 
@@ -238,9 +238,10 @@ Keputusan final:
 
 - **Kegiatan sebagai pusat** (keputusan Fase 7): entitas utama adalah *Kegiatan*; proposal & LPJ adalah dua tahap di dalam satu kegiatan. Alur: buat kegiatan + ajukan proposal → review → disetujui → kegiatan berlangsung → unggah LPJ → review LPJ → selesai/arsip. Rantai review proposal & LPJ sama: **Sekretaris** (kelengkapan) → **Bendahara** (anggaran/laporan keuangan) → **Ketua/Wakil** (keputusan). Penyetuju ≠ pengaju; catatan wajib saat revisi/tolak.
 - **Pengaju wajib login**: tidak ada form proposal/LPJ publik. Akun per orang dengan role **`pengaju_kegiatan`**, terhubung ke satu **organisasi** (UKM, HMJ, BEM, Panitia, Lainnya). Akun dibuat Super Admin atau Sekretaris (Sekretaris hanya boleh mengelola akun `pengaju_kegiatan`). Pengurus BEM boleh mengajukan kegiatan internal dengan akunnya sendiri (organisasi BEM).
-- **Pengaju kegiatan bukan pengurus BEM**: tidak wajib kas, tidak masuk target pengumuman "semua pengurus"/per divisi, tidak masuk struktur, tidak masuk grup chat divisi BEM, tidak melihat kalender internal, aspirasi, kas, drive, konten, atau data internal lain. Yang bisa diakses: Kegiatan Saya, Profil Saya, Kalender publik, Kotak Masuk (hanya pesan yang ditujukan kepadanya), Chat (Fase 9).
+- **Pengaju kegiatan bukan pengurus BEM**: tidak wajib kas, tidak masuk target pengumuman "semua pengurus"/per divisi, tidak masuk struktur, tidak masuk grup chat divisi BEM, tidak melihat kalender internal, aspirasi, kas, drive, konten, atau data internal lain. Yang bisa diakses: Kegiatan Saya, Profil Saya, Kalender publik, Kotak Masuk (hanya pesan yang ditujukan kepadanya), Chat (Fase 9). **Amandemen Fase 11:** ditambah satu menu **"Acara Saya"**, hanya berisi acara dari kegiatan di mana ia tercatat sebagai panitia (scope query + policy); menu/modul lain tetap terlarang dan pengaju bukan panitia tetap 403/404 ke semua halaman acara.
 - **Pengumuman/surat ke organisasi**: pengaju tidak pernah masuk target pengurus (semua pengurus, per role, per divisi, user tertentu). Ada jenis target terpisah **"Semua organisasi"** dan **"Organisasi tertentu"** (penerima = akun pengaju aktif di organisasi itu), hanya untuk Surat Humas (`letter.create`) dan Pengumuman Sekretaris (`announcement.create`).
 - **Tenggat LPJ** = 14 hari setelah acara selesai (setting `lpj_deadline_days`). Pengingat H-3, hari tenggat, lalu mingguan selama terlambat; LPJ terlambat ditandai merah. **Belum ada sanksi** (mis. blokir proposal baru) — kode disiapkan agar mudah ditambahkan.
+- **Fase 11 — mesin form, acara & pendaftaran, ujian** (keputusan final, dikerjakan setelah website online, urutan 11A → 11C → 11B; rincian di [`docs/SPEC-FASE-11.md`](docs/SPEC-FASE-11.md) bagian 0 & 0b): satu mesin form untuk pendaftaran acara, exit ticket, ujian oprec, pre/post-test; acara selalu terhubung ke Kegiatan yang disetujui; **panitia di level Kegiatan** (`student_activity_committee_members`, kegiatan lama wajib mengisi panitia sebelum membuat acara), anggota panitia wajib akun terdaftar, akun baru lewat **pengajuan PJ → disetujui Sekretaris satu klik → kredensial tampil sekali ke PJ**; uang tiket tidak masuk kas BEM; kehadiran dari exit ticket (QR dinamis), check-in opsional; sertifikat PDF otomatis; ujian online hanya penyaring awal oprec. Tabel acara berawalan **`activity_event_*`**. Upload: gambar (termasuk bukti transfer) ≤2 MB → WebP privat, PDF/dokumen ≤10 MB, poster seperti cover Medpub. Form acara: rate limit per email/kode tiket + per IP longgar, pendaftaran dengan Turnstile, exit ticket tanpa Turnstile. `Permissions-Policy: camera=(self)` hanya di halaman check-in. Ujian oprec: nilai total disimpan, isi jawaban ikut retensi 6 bulan.
 
 ## C2. Halaman publik
 
@@ -307,6 +308,7 @@ Keputusan final:
 **Pengaju kegiatan (`pengaju_kegiatan`, bukan pengurus BEM)**
 - Kegiatan Saya (semua kegiatan organisasinya): buat kegiatan + ajukan proposal, unggah LPJ setelah proposal disetujui, lihat riwayat & catatan revisi, ajukan pindah penanggung jawab.
 - Profil Saya, Kalender publik, Kotak Masuk (pesan untuknya saja), Chat (Fase 9). Tidak ada akses ke modul internal BEM.
+- **Acara Saya** (Fase 11, amandemen C1): hanya acara dari kegiatan di mana ia panitia — kelola acara, peserta, exit ticket, sertifikat, keuangan acara. Lihat `docs/SPEC-FASE-11.md`.
 
 ## C4. Kalender (internal & eksternal)
 
@@ -403,6 +405,8 @@ K = kelola penuh · T = tambah/draft · S = setujui · L = lihat · L-own = hany
 | Chat | ya | ya | ya | ya | ya | ya | ya | ya | ya | — |
 
 \* Hanya folder yang dibagikan (`folder_permissions`).
+
+**Fase 11 (acara):** panitia kegiatan mengelola acaranya (pengurus BEM maupun pengaju); Super Admin & Pembina melihat semua acara & laporan, tetapi **data peserta hanya lihat** untuk Super Admin (`EnforcedForSuperAdmin`, pengecualian dari kolom "K"); pengurus/pengaju lain tidak melihat data peserta. Rincian: `docs/SPEC-FASE-11.md` bagian 11B-B3.
 
 ## D4. Aturan kepemilikan (wajib diuji)
 
@@ -592,6 +596,15 @@ Konsep sudah diputuskan (C1, C7): **kegiatan sebagai pusat**, pengaju wajib logi
 5. Tulis `docs/DEPLOY.md` (syarat hosting; clone; `composer install --no-dev --optimize-autoloader`; `npm run build` di lokal lalu upload `public/build` bila hosting tanpa Node; `.env` produksi; `key:generate`; `migrate --force`; seeder tanpa DemoSeeder; `storage:link`; document root ke `public/`; cron `* * * * * cd /path && php artisan schedule:run >> /dev/null 2>&1`; checklist `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, Cloudflare, kredensial Pusher/VAPID/Turnstile). **Peringatan wajib:** `APP_KEY` produksi harus dibackup dan TIDAK BOLEH di-generate ulang setelah dipakai (isi chat terenkripsi tidak akan terbaca) — rujuk `docs/CATATAN-PRODUKSI.md`.
 6. Tulis `docs/PANDUAN-PENGURUS.md` (login pertama, aktifkan notifikasi, panduan per role).
 7. **Selesai** (keputusan pemilik): 2FA TOTP bawaan Filament + 8 kode pemulihan, wajib super_admin/sekretaris/bendahara lewat `RequireTwoFactorForPrivilegedRoles` (juga di route berkas panel; ganti password dulu, baru 2FA), opsional role lain di Profil Saya, Reset 2FA oleh Super Admin & `bem:reset-2fa`; `bem:create-admin` interaktif (password tidak ke `.env`; `SuperAdminSeeder` dilewati bila `SUPERADMIN_*` kosong); backup `spatie/laravel-backup` ke disk `backups` (siap R2), ZIP AES-256 `BACKUP_ARCHIVE_PASSWORD`, gagal → lonceng+push Super Admin, halaman *Backup* (unduh/backup DB sekarang), pengingat bulanan `bem:backup-reminder`; HSTS lewat `HSTS_ENABLED` (default mati); session terenkripsi & cookie Secure otomatis di HTTPS; `PUBLIC_PATH` untuk hosting `public_html`; `Model::automaticallyEagerLoadRelationships()` + index tambahan; test setiap role punya ≥1 grafik; `bem:export-data`/`bem:import-data` (ZIP + `--dry-run`, tanpa akun & data demo, setting teknis tidak ikut); dokumen `docs/DEPLOY.md`, `docs/PANDUAN-PENGURUS.md`, `docs/AUDIT-KEAMANAN.md`.
+
+## Fase 11 — Mesin Form, Acara & Pendaftaran, Ujian
+
+> **Dikerjakan setelah website online, urutan 11A → 11C → 11B.** Spesifikasi lengkap (data, alur, hak akses, frontend, test): [`docs/SPEC-FASE-11.md`](docs/SPEC-FASE-11.md). Setiap sub-fase: rencana → persetujuan pemilik → kerjakan → BAGIAN G.
+
+1. **11A — Mesin Form**: `forms`, `form_sections`, `form_questions`, `form_responses`, `form_answers`; 13 jenis pertanyaan; mode kuis (penilaian otomatis/manual, acak per peserta, batas waktu di server, kunci jawaban tidak pernah dikirim ke browser); pembuat form bergaya Google Form di panel; tampilan isi form publik (Turnstile kecuali exit ticket). Spek bagian 11A.
+2. **11C — Ujian**: ujian awal oprec per gelombang (satu kali kesempatan; esai dinilai koordinator divisi pilihan/Sekretaris; nilai di halaman seleksi & export; nilai total disimpan, isi jawaban ikut retensi 6 bulan) dan pre/post-test acara. Spek bagian 11C.
+3. **11B — Acara & Pendaftaran**: panitia di level Kegiatan (`student_activity_committee_members`) + pengajuan akun panitia (`committee_account_requests`, disetujui Sekretaris satu klik); tabel `activity_event_*`; pendaftaran gratis/berbayar (bukti transfer WebP privat), e-tiket QR, check-in opsional (`camera=(self)` hanya di halaman ini), exit ticket lewat QR dinamis sebagai dasar kehadiran, sertifikat PDF + halaman verifikasi, keuangan acara terpisah dari kas BEM, Laporan Acara di LPJ, menu pengaju **"Acara Saya"**. Spek bagian 11B.
+4. Test & widget: lihat bagian "Test minimal" dan "Widget dashboard" di spesifikasi; jaring pengaman pengaju diperbarui (pengaju bukan panitia tetap 403/404).
 
 ---
 
